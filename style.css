@@ -1,0 +1,249 @@
+
+/* =====================================
+   DEBRIS ARENA — ESTILO MINIMALISTA
+===================================== */
+
+:root {
+  --background: #c6c6c6;
+  --blue: #00bfff;
+  --cyan: #00efff;
+  --red: #ff102d;
+  --panel: rgba(25, 30, 35, 0.82);
+  --white: #ffffff;
+  --text-muted: #c4cbd0;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+
+body {
+  background: var(--background);
+  color: var(--white);
+  font-family: Arial, Helvetica, sans-serif;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* ===== CANVAS 3D ===== */
+
+#world {
+  display: block;
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  outline: none;
+  cursor: crosshair;
+  z-index: 0;
+}
+
+/* ===== ESCONDER A ARMA ANTIGA ===== */
+
+#weaponRig,
+.weapon-rig,
+.weapon-label,
+.weaponRig,
+#ammo,
+.ammo,
+#magSize,
+#fireLabel {
+  display: none !important;
+}
+
+/* ===== HUD SUPERIOR ===== */
+
+#simple-hud {
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  z-index: 5;
+  pointer-events: none;
+}
+
+.hud-box {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 13px;
+  background: var(--panel);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 4px;
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.hud-box strong {
+  color: var(--cyan);
+  font-size: 14px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ===== MIRA CENTRAL ===== */
+
+#simple-crosshair {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  width: 22px;
+  height: 22px;
+  transform: translate(-50%, -50%);
+  z-index: 6;
+  pointer-events: none;
+  transition: transform 80ms ease-out;
+}
+
+#simple-crosshair::before,
+#simple-crosshair::after {
+  content: "";
+  position: absolute;
+  background: var(--cyan);
+  box-shadow:
+    1px 1px 0 #111,
+    -1px -1px 0 rgba(0, 0, 0, 0.4);
+}
+
+#simple-crosshair::before {
+  width: 22px;
+  height: 2px;
+  left: 0;
+  top: 10px;
+}
+
+#simple-crosshair::after {
+  width: 2px;
+  height: 22px;
+  top: 0;
+  left: 10px;
+}
+
+/* ===== INSTRUÇÕES ===== */
+
+#simple-message {
+  position: fixed;
+  bottom: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: calc(100% - 30px);
+  padding: 10px 15px;
+  background: var(--panel);
+  color: #f0f3f5;
+  border-radius: 4px;
+  font-size: 12px;
+  text-align: center;
+  white-space: nowrap;
+  z-index: 5;
+  pointer-events: none;
+}
+
+/* ===== TELA DE RESULTADO ===== */
+
+#simple-end {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(18, 22, 26, 0.82);
+  backdrop-filter: blur(5px);
+  color: var(--white);
+  text-align: center;
+}
+
+#simple-end > div {
+  width: min(420px, 100%);
+  padding: 32px 24px;
+  background: rgba(35, 40, 45, 0.96);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+}
+
+#simple-end h1 {
+  margin: 0 0 18px;
+  font-size: clamp(24px, 5vw, 36px);
+  font-weight: 900;
+  letter-spacing: 1px;
+}
+
+#final-result {
+  color: var(--text-muted);
+  font-size: 15px;
+  line-height: 2;
+}
+
+#final-result strong {
+  color: var(--cyan);
+}
+
+/* ===== BOTÕES ===== */
+
+#simple-end button {
+  display: inline-block;
+  margin-top: 18px;
+  padding: 13px 22px;
+  background: var(--blue);
+  color: #07131a;
+  border: none;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition:
+    background 150ms ease,
+    transform 150ms ease;
+}
+
+#simple-end button:hover {
+  background: var(--cyan);
+  transform: translateY(-2px);
+}
+
+#simple-end button:active {
+  transform: translateY(0);
+}
+
+/* ===== RESPONSIVIDADE ===== */
+
+@media (max-width: 600px) {
+  #simple-hud {
+    top: 8px;
+    left: 8px;
+    gap: 5px;
+  }
+
+  .hud-box {
+    padding: 8px;
+    gap: 4px;
+    font-size: 9px;
+    letter-spacing: 0;
+  }
+
+  .hud-box strong {
+    font-size: 12px;
+  }
+
+  #simple-message {
+    bottom: 10px;
+    font-size: 10px;
+    white-space: normal;
+    width: max-content;
+    max-width: calc(100% - 20px);
+  }
+}

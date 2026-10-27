@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Debris Arena — Aim Trainer</title>
+
+  <link rel="stylesheet" href="style.css">
+
+  <!-- Importa o Three.js para renderizar o cenário 3D -->
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"
+      }
+    }
+  </script>
+</head>
+
+<body>
+  <!-- Área de renderização do jogo -->
+  <canvas id="world" tabindex="0"></canvas>
+
+  <!-- O HUD, a mira e as telas de resultado são criados pelo script.js -->
+
+  <script type="module" src="script.js"></script>
+</body>
+</html>
