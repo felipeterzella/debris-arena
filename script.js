@@ -75,13 +75,13 @@ const AIM = {
 
 /* Gravity Flick: blocos caem de cima e precisam ser acertados antes do chão */
 const GRAVITY = {
-  concurrent: 4,
-  spawnY: 8.5,        // altura inicial dos blocos
-  size: 0.9,          // aresta do cubo
+  concurrent: 2,      // alvos caindo ao mesmo tempo
+  spawnY: 8.5,        // altura inicial dos alvos
+  size: 0.9,          // diâmetro da esfera
   minSpeed: 2.5,      // unidades/s
   maxSpeed: 7,
   rampUp: 0.4,        // até +40% de velocidade ao longo da partida
-  minGapX: 1.5,       // distância horizontal mínima entre blocos
+  minGapX: 2.5,       // distância horizontal mínima entre alvos
   baseScore: 100,
   speedBonus: 10,     // bônus = velocidade × 10 (blocos rápidos valem mais)
   missPenalty: 50     // pontos perdidos quando o bloco toca o chão
@@ -664,11 +664,11 @@ const targetRingGeometry = new THREE.TorusGeometry(
   28
 );
 
-/* Bloco do Gravity Flick */
-const gravityBlockGeometry = new THREE.BoxGeometry(
-  GRAVITY.size,
-  GRAVITY.size,
-  GRAVITY.size
+/* Alvo redondo do Gravity Flick */
+const gravityBlockGeometry = new THREE.SphereGeometry(
+  GRAVITY.size / 2,
+  28,
+  20
 );
 
 /* Inimigo do Peeker's Alley */
@@ -924,11 +924,6 @@ function spawnGravityBlock(extraHeight = 0) {
   const y = GRAVITY.spawnY + extraHeight;
 
   block.position.set(x, y, z);
-  block.rotation.set(
-    Math.random() * Math.PI,
-    Math.random() * Math.PI,
-    Math.random() * Math.PI
-  );
 
   // Velocidade variada, com leve aumento ao longo da partida.
   const progress = 1 - game.time / game.duration;
@@ -936,8 +931,6 @@ function spawnGravityBlock(extraHeight = 0) {
 
   block.userData.speed =
     THREE.MathUtils.randFloat(GRAVITY.minSpeed, GRAVITY.maxSpeed) * ramp;
-
-  block.userData.spin = THREE.MathUtils.randFloat(-1.2, 1.2);
 
   targetGroup.add(block);
   game.targets.push(block);
@@ -975,7 +968,7 @@ function resetTargets() {
 
   if (trainingMode === 'gravity') {
     for (let i = 0; i < GRAVITY.concurrent; i++) {
-      spawnGravityBlock(i * 2.2 + Math.random());
+      spawnGravityBlock(i * 4 + Math.random());
     }
     return;
   }
@@ -1351,7 +1344,7 @@ function shoot() {
         THREE.MathUtils.randFloat(PEEK.respawnMin, PEEK.respawnMax)
       );
     } else if (trainingMode === 'gravity') {
-      spawnGravityBlock(Math.random() * 1.5);
+      spawnGravityBlock(Math.random() * 3);
     } else {
       spawnTarget();
     }
@@ -1391,7 +1384,7 @@ function lockedMessage() {
   }
 
   if (trainingMode === 'gravity') {
-    return 'GRAVITY FLICK · Acerte os blocos antes que toquem o chão · Rápidos valem mais';
+    return 'GRAVITY FLICK · Acerte os alvos antes que toquem o chão · Rápidos valem mais';
   }
 
   return 'WASD para mover · Mouse para mirar · Clique para acertar';
@@ -1510,7 +1503,7 @@ $('#apply-settings').addEventListener('click', () => {
     tracking: 'TRACKING · Siga a única bolinha com a mira; não precisa clicar',
     debris: 'PRECISION ARENA · Treino livre de precisão',
     peek: 'PEEKER\'S ALLEY · Alvos aparecem nas quinas por ~1s; em pé ou agachados',
-    gravity: 'GRAVITY FLICK · Blocos caem de cima; acerte antes de tocarem o chão'
+    gravity: 'GRAVITY FLICK · Alvos caem de cima; acerte antes de tocarem o chão'
   }[trainingMode];
 });
 
@@ -1549,7 +1542,7 @@ function finishGame() {
     $('#final-result').innerHTML =
       `Modo: <strong>GRAVITY FLICK</strong><br>
        Pontuação: <strong>${Math.floor(game.score)}</strong><br>
-       Blocos destruídos: <strong>${game.hits}</strong><br>
+       Alvos destruídos: <strong>${game.hits}</strong><br>
        Caíram no chão: <strong>${game.escaped}</strong><br>
        Tiros errados: <strong>${game.misses}</strong><br>
        Precisão: <strong>${accuracy}%</strong>`;
@@ -1709,15 +1702,13 @@ function animate(now) {
 
         if (trainingMode === 'gravity') {
           target.position.y -= data.speed * delta;
-          target.rotation.x += data.spin * delta;
-          target.rotation.y += data.spin * 0.7 * delta;
 
           // Tocou o chão sem ser acertado: perde pontos.
           if (target.position.y - GRAVITY.size / 2 <= 0) {
             game.escaped++;
             game.score = Math.max(0, game.score - GRAVITY.missPenalty);
             removeTarget(target);
-            spawnGravityBlock(Math.random() * 1.5);
+            spawnGravityBlock(Math.random() * 3);
           }
 
           continue;
