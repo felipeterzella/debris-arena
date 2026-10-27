@@ -451,7 +451,6 @@ endScreen.innerHTML = `
     <h1>TREINO FINALIZADO</h1>
     <p id="final-result"></p>
     <button id="restart-game">JOGAR NOVAMENTE</button>
-    <button id="back-to-game" class="secondary">VOLTAR À ARENA</button>
   </div>
 `;
 document.body.appendChild(endScreen);
@@ -1511,13 +1510,6 @@ $('#restart-game').addEventListener(
   restartGame
 );
 
-$('#back-to-game').addEventListener('click', () => {
-  endScreen.style.display = 'none';
-  game.running = true;
-  previousTime = performance.now();
-
-  canvas.requestPointerLock?.();
-});
 
 /* ---------- LOOP DO JOGO ---------- */
 
