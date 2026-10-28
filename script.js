@@ -75,6 +75,7 @@ const GRAVITY = {
 };
 
 const FLICK = {
+  count: 4,
   lifetime: 2750,
   fadeStart: 0.3,
   missPenalty: 50,
@@ -599,7 +600,11 @@ function resetTargets() {
     return;
   }
 
-  const count = trainingMode === 'tracking' ? 1 : 5;
+  const count = trainingMode === 'tracking'
+    ? 1
+    : trainingMode === 'flick'
+      ? FLICK.count
+      : 5;
 
   for (let i = 0; i < count; i++) {
 
