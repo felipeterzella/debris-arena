@@ -63,7 +63,7 @@ const GRAVITY = {
   spawnY: 8.5,
   size: 0.9,
   hitRadius: 0.85,
-  speed: 3.5,
+  speed: 4,
   minGapX: 2.5,
   baseScore: 100,
   missPenalty: 50
