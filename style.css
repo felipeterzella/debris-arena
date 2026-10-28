@@ -152,10 +152,18 @@ body {
 }
 
 #sensitivity-value {
-  min-width: 43px;
+  width: 68px;
+  padding: 5px 6px;
   color: var(--cyan);
+  background: #343b40;
+  border: 1px solid #59636a;
+  border-radius: 3px;
+  outline-color: var(--blue);
   text-align: right;
   font-size: 12px;
+  font-weight: bold;
+  user-select: text;
+  -webkit-user-select: text;
 }
 
 /* ===== BOTÕES DO PAINEL ===== */
