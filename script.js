@@ -1191,6 +1191,19 @@ sensitivityUnit.addEventListener('change', () => {
   setSliderFromRadians(radians);
 });
 
+/* Enquanto digita, aplica o valor na hora sem mexer no texto do campo */
+sensitivityValue.addEventListener('input', () => {
+  const unit = currentUnit();
+  const typed = Number(sensitivityValue.value.replace(',', '.'));
+
+  if (!Number.isFinite(typed) || typed <= 0) return;
+
+  const value = THREE.MathUtils.clamp(typed / unit.scale, unit.min, unit.max);
+
+  sensitivitySlider.value = String(value);
+  mouseSensitivity = value * unit.factor;
+});
+
 /* Digitar o valor exato (ex.: 0.89) e confirmar com Enter ou ao sair do campo */
 sensitivityValue.addEventListener('change', () => {
   const unit = currentUnit();
