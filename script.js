@@ -821,7 +821,9 @@ function pickTrackingDestination(position, previousDirection, minDist, maxDist) 
     if (position.y + dy < minY || position.y + dy > maxY) dy = -dy;
 
     const x = THREE.MathUtils.clamp(position.x + dx, minX, maxX);
-    const y = THREE.MathUtils.clamp(position.y + dy, minY, maxY);
+    const y = hShare === 1
+      ? position.y
+      : THREE.MathUtils.clamp(position.y + dy, minY, maxY);
 
     const realDx = x - position.x;
     const realDy = y - position.y;
@@ -829,6 +831,10 @@ function pickTrackingDestination(position, previousDirection, minDist, maxDist) 
     if (Math.hypot(realDx, realDy) < 1) continue;
 
     const direction = Math.atan2(realDy, realDx);
+
+    if (hShare === 1) {
+      return { x, y: position.y, direction };
+    }
 
     let diff = Math.PI;
     if (previousDirection !== null) {
