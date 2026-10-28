@@ -63,7 +63,7 @@ const GRAVITY = {
   spawnY: 8.5,
   size: 0.9,
   hitRadius: 0.85,
-  speed: 4,
+  speed: 3.7,
   minGapX: 2.5,
   baseScore: 100,
   missPenalty: 50
@@ -1483,8 +1483,8 @@ function animate(now) {
             data.moveStart = now;
 
             data.moveDuration = Math.random() < 0.25
-              ? THREE.MathUtils.randFloat(0.5, 0.75)
-              : THREE.MathUtils.randFloat(0.65, 1.2);
+              ? THREE.MathUtils.randFloat(0.6, 0.85)
+              : THREE.MathUtils.randFloat(0.75, 1.3);
 
             data.moveSpeed = THREE.MathUtils.randFloat(0.8, 1.35);
             data.nextDirectionChange = now + THREE.MathUtils.randFloat(350, 900);
@@ -1507,8 +1507,8 @@ function animate(now) {
             data.moveStart = now;
 
             data.moveDuration = Math.random() < 0.22
-              ? THREE.MathUtils.randFloat(0.5, 0.75)
-              : THREE.MathUtils.randFloat(0.65, 1.2);
+              ? THREE.MathUtils.randFloat(0.6, 0.85)
+              : THREE.MathUtils.randFloat(0.75, 1.3);
 
             data.moveSpeed = THREE.MathUtils.randFloat(0.85, 1.3);
             data.nextDirectionChange = now + THREE.MathUtils.randFloat(350, 900);
