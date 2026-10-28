@@ -802,11 +802,17 @@ function pickTrackingDestination(position, previousDirection, minDist, maxDist) 
   for (let attempt = 0; attempt < 10; attempt++) {
     const distance = THREE.MathUtils.randFloat(minDist, maxDist);
 
-    const hShare = THREE.MathUtils.clamp(
-      TRACK_H_SHARE + THREE.MathUtils.randFloat(-0.15, 0.15),
-      0.3,
-      0.85
-    );
+    const roll = Math.random();
+
+    const hShare = roll < 0.4
+      ? 1
+      : roll < 0.9
+        ? THREE.MathUtils.clamp(
+            TRACK_H_SHARE + THREE.MathUtils.randFloat(-0.2, 0.2),
+            0.3,
+            0.85
+          )
+        : 0;
 
     let dx = distance * hShare * (Math.random() < 0.5 ? -1 : 1);
     let dy = distance * (1 - hShare) * (Math.random() < 0.5 ? -1 : 1);
