@@ -4,7 +4,18 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <title>Debris Arena — Aim Trainer</title>
+  <title>Debris Arena — Aim Trainer 3D</title>
+  <meta name="description" content="Aim trainer 3D no navegador com os modos Flick, Tracking, Precision Arena, Peeker's Alley e Gravity Flick. Sensibilidade ajustável, combo e pontuação.">
+  <meta name="theme-color" content="#c6c6c6">
+
+  <!-- Open Graph (compartilhamento) -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Debris Arena — Aim Trainer 3D">
+  <meta property="og:description" content="Treine sua mira em 3D direto no navegador, com cinco modos de treino.">
+  <meta property="og:locale" content="pt_BR">
+
+  <!-- Favicon inline (evita requisição extra e erro 404) -->
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' fill='%23191e23'/%3E%3Cpath d='M16 5v22M5 16h22' stroke='%2300efff' stroke-width='3'/%3E%3C/svg%3E">
 
   <link rel="stylesheet" href="style.css">
 
@@ -16,13 +27,95 @@
       }
     }
   </script>
+  <link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js">
 </head>
 
 <body>
-  <!-- Área de renderização do jogo -->
-  <canvas id="world" tabindex="0"></canvas>
+  <h1 class="sr-only">Debris Arena — Aim Trainer 3D</h1>
 
-  <!-- O HUD, a mira e as telas de resultado são criados pelo script.js -->
+  <!-- Placar da partida -->
+  <header id="simple-hud" aria-label="Estatísticas da partida">
+    <div class="hud-box">MODO <strong id="hud-mode">FLICK</strong></div>
+    <div class="hud-box">PONTOS <strong id="hud-score">0</strong></div>
+    <div class="hud-box">ACERTOS <strong id="hud-hits">0</strong></div>
+    <div class="hud-box">PRECISÃO <strong id="hud-accuracy">100%</strong></div>
+    <div class="hud-box">TEMPO <strong id="hud-time">60</strong></div>
+    <div class="hud-box" id="hud-combo-box">COMBO <strong id="hud-combo">x1.0</strong></div>
+  </header>
+
+  <!-- Área de renderização do jogo -->
+  <main>
+    <canvas id="world" tabindex="0" role="img" aria-label="Arena 3D de treino de mira. Clique para capturar o mouse e jogar."></canvas>
+  </main>
+
+  <!-- Painel de configurações -->
+  <aside id="training-settings" aria-label="Configurações do treino">
+    <label>
+      MODO DE TREINO
+      <select id="training-mode">
+        <option value="flick">Flick / Speed</option>
+        <option value="tracking">Tracking</option>
+        <option value="debris">Precision Arena</option>
+        <option value="peek">Peeker's Alley (Tac-FPS)</option>
+        <option value="gravity">Gravity Flick</option>
+      </select>
+    </label>
+
+    <label>
+      ESCALA DA SENSIBILIDADE
+      <select id="sensitivity-unit">
+        <option value="game">Padrão do jogo</option>
+        <option value="cs">Counter-Strike (CS2)</option>
+        <option value="valorant">Valorant</option>
+      </select>
+    </label>
+
+    <label>
+      SENSIBILIDADE DO MOUSE
+      <span class="sensitivity-row">
+        <input
+          id="sensitivity-slider"
+          type="range"
+          min="0.0005"
+          max="0.0100"
+          step="0.0001"
+          value="0.0020"
+        >
+        <output id="sensitivity-value" for="sensitivity-slider">0.20</output>
+      </span>
+    </label>
+
+    <button id="sensitivity-reset" type="button">RESETAR SENSIBILIDADE</button>
+
+    <label>
+      DURAÇÃO DA PARTIDA
+      <select id="training-duration">
+        <option value="30">30 segundos</option>
+        <option value="60" selected>60 segundos</option>
+        <option value="90">90 segundos</option>
+        <option value="120">120 segundos</option>
+      </select>
+    </label>
+
+    <button id="apply-settings" type="button">APLICAR CONFIGURAÇÕES</button>
+  </aside>
+
+  <button id="settings-toggle" type="button" aria-controls="training-settings" aria-expanded="true">OCULTAR CONFIGURAÇÕES</button>
+
+  <!-- Mira central -->
+  <div id="simple-crosshair" aria-hidden="true"></div>
+
+  <!-- Instruções -->
+  <p id="simple-message" role="status">Clique na arena para capturar o mouse · WASD para mover · Tracking: mantenha a mira na bolinha</p>
+
+  <!-- Tela de resultado -->
+  <div id="simple-end" role="dialog" aria-modal="true" aria-labelledby="end-title">
+    <div>
+      <h2 id="end-title">TREINO FINALIZADO</h2>
+      <p id="final-result"></p>
+      <button id="restart-game" type="button">JOGAR NOVAMENTE</button>
+    </div>
+  </div>
 
   <script type="module" src="script.js"></script>
 </body>
