@@ -804,7 +804,7 @@ function pickTrackingDestination(position, previousDirection, minDist, maxDist) 
 
     const roll = Math.random();
 
-    const hShare = roll < 0.4
+    const hShare = roll < 0.3
       ? 1
       : roll < 0.9
         ? THREE.MathUtils.clamp(
