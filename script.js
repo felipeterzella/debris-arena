@@ -701,7 +701,9 @@ const hudEls = {
   accuracy: $('#hud-accuracy'),
   time: $('#hud-time'),
   combo: $('#hud-combo'),
-  comboBox: $('#hud-combo-box')
+  comboBox: $('#hud-combo-box'),
+  missed: $('#hud-missed'),
+  missedBox: $('#hud-missed-box')
 };
 
 function setHud(element, text) {
@@ -744,6 +746,13 @@ function updateHUD() {
   }
 
   setHud(hudEls.combo, `x${comboMultiplier().toFixed(1)}`);
+
+  const missedDisplay = trainingMode === 'flick' ? 'block' : 'none';
+  if (hudEls.missedBox.style.display !== missedDisplay) {
+    hudEls.missedBox.style.display = missedDisplay;
+  }
+
+  setHud(hudEls.missed, game.escaped);
 }
 
 function aimDistanceTo(point) {
@@ -1295,7 +1304,7 @@ function finishGame() {
       }</strong><br>
        Pontuação: <strong>${Math.floor(game.score)}</strong><br>
        Acertos: <strong>${game.hits}</strong><br>
-       ${trainingMode === 'flick' ? `Sumiram: <strong>${game.escaped}</strong><br>` : ''}
+       ${trainingMode === 'flick' ? `Perdidas: <strong>${game.escaped}</strong><br>` : ''}
        Erros: <strong>${game.misses}</strong><br>
        Precisão: <strong>${accuracy}%</strong>`;
   }
