@@ -692,10 +692,10 @@ function playHitSound() {
 }
 
 const MODE_LABELS = {
-  flick: 'FLICK',
+  flick: 'SPEED',
   tracking: 'TRACKING',
   debris: 'PRECISION',
-  peek: 'PEEKER',
+  peek: 'FPS',
   gravity: 'GRAVITY'
 };
 
@@ -1040,7 +1040,7 @@ function lockedMessage() {
   }
 
   if (trainingMode === 'peek') {
-    return 'PEEKER\'S ALLEY · Mire nas quinas · Headshot vale 3x · Deixar o alvo sumir quebra o combo';
+    return 'FPS · Mire nas quinas · Headshot vale 3x · Deixar o alvo sumir quebra o combo';
   }
 
   if (trainingMode === 'gravity') {
@@ -1048,7 +1048,7 @@ function lockedMessage() {
   }
 
   if (trainingMode === 'flick') {
-    return 'FLICK · Acerte antes que a bolinha desapareça · Quanto mais rápido, mais pontos';
+    return 'SPEED · Acerte antes que a bolinha desapareça · Quanto mais rápido, mais pontos';
   }
 
   return 'WASD para mover · Mouse para mirar · Clique para acertar';
@@ -1248,10 +1248,10 @@ $('#apply-settings').addEventListener('click', () => {
   updateHUD();
 
   message.textContent = {
-    flick: 'FLICK / SPEED · Alvos parados que desaparecem com o tempo; acerte rápido',
+    flick: 'SPEED · Alvos parados que desaparecem com o tempo; acerte rápido',
     tracking: 'TRACKING · Siga a única bolinha com a mira; não precisa clicar',
     debris: 'PRECISION ARENA · Treino livre de precisão',
-    peek: 'PEEKER\'S ALLEY · Alvos aparecem nas quinas por ~1s; em pé ou agachados',
+    peek: 'FPS · Alvos aparecem nas quinas por ~1s; em pé ou agachados',
     gravity: 'GRAVITY FLICK · Alvos caem de cima; acerte antes de tocarem o chão'
   }[trainingMode];
 });
@@ -1295,7 +1295,7 @@ function finishGame() {
        Precisão: <strong>${accuracy}%</strong>`;
   } else if (trainingMode === 'peek') {
     $('#final-result').innerHTML =
-      `Modo: <strong>PEEKER'S ALLEY</strong><br>
+      `Modo: <strong>FPS</strong><br>
        Pontuação: <strong>${Math.floor(game.score)}</strong><br>
        Abates: <strong>${game.hits}</strong> (headshots: <strong>${game.headshots}</strong>)<br>
        Sumiram sem levar tiro: <strong>${game.escaped}</strong><br>
@@ -1305,7 +1305,7 @@ function finishGame() {
   } else {
     $('#final-result').innerHTML =
       `Modo: <strong>${
-        trainingMode === 'debris' ? 'PRECISION ARENA' : 'FLICK'
+        trainingMode === 'debris' ? 'PRECISION ARENA' : 'SPEED'
       }</strong><br>
        Pontuação: <strong>${Math.floor(game.score)}</strong><br>
        Acertos: <strong>${game.hits}</strong><br>
