@@ -8,18 +8,15 @@
   <meta name="description" content="Aim trainer 3D no navegador com os modos Flick, Tracking, Precision Arena, Peeker's Alley e Gravity Flick. Sensibilidade ajustável, combo e pontuação.">
   <meta name="theme-color" content="#c6c6c6">
 
-  <!-- Open Graph (compartilhamento) -->
   <meta property="og:type" content="website">
   <meta property="og:title" content="Debris Arena — Aim Trainer 3D">
   <meta property="og:description" content="Treine sua mira em 3D direto no navegador, com cinco modos de treino.">
   <meta property="og:locale" content="pt_BR">
 
-  <!-- Favicon inline (evita requisição extra e erro 404) -->
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' fill='%23191e23'/%3E%3Cpath d='M16 5v22M5 16h22' stroke='%2300efff' stroke-width='3'/%3E%3C/svg%3E">
 
   <link rel="stylesheet" href="style.css">
 
-  <!-- Importa o Three.js para renderizar o cenário 3D -->
   <script type="importmap">
     {
       "imports": {
@@ -33,7 +30,6 @@
 <body>
   <h1 class="sr-only">Debris Arena — Aim Trainer 3D</h1>
 
-  <!-- Placar da partida -->
   <header id="simple-hud" aria-label="Estatísticas da partida">
     <div class="hud-box">MODO <strong id="hud-mode">FLICK</strong></div>
     <div class="hud-box">PONTOS <strong id="hud-score">0</strong></div>
@@ -41,14 +37,13 @@
     <div class="hud-box">PRECISÃO <strong id="hud-accuracy">100%</strong></div>
     <div class="hud-box">TEMPO <strong id="hud-time">60</strong></div>
     <div class="hud-box" id="hud-combo-box">COMBO <strong id="hud-combo">x1.0</strong></div>
+    <div class="hud-box" id="hud-missed-box">PERDIDAS <strong id="hud-missed">0</strong></div>
   </header>
 
-  <!-- Área de renderização do jogo -->
   <main>
     <canvas id="world" tabindex="0" role="img" aria-label="Arena 3D de treino de mira. Clique para capturar o mouse e jogar."></canvas>
   </main>
 
-  <!-- Painel de configurações -->
   <aside id="training-settings" aria-label="Configurações do treino">
     <label>
       MODO DE TREINO
@@ -103,13 +98,10 @@
 
   <button id="settings-toggle" type="button" aria-controls="training-settings" aria-expanded="true">OCULTAR CONFIGURAÇÕES</button>
 
-  <!-- Mira central -->
   <div id="simple-crosshair" aria-hidden="true"></div>
 
-  <!-- Instruções -->
   <p id="simple-message" role="status">Clique na arena para capturar o mouse · WASD para mover · Tracking: mantenha a mira na bolinha</p>
 
-  <!-- Tela de resultado -->
   <div id="simple-end" role="dialog" aria-modal="true" aria-labelledby="end-title">
     <div>
       <h2 id="end-title">TREINO FINALIZADO</h2>
