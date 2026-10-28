@@ -2,8 +2,8 @@ import * as THREE from 'three';
 
 /* ==========================================
    PRECISION ARENA — AIM TRAINER 3D
-   Modos: Flick, Tracking, Precision Arena
-   e Peeker's Alley (Tac-FPS)
+   Modos: Flick, Tracking, Precision Arena,
+   Peeker's Alley (Tac-FPS) e Gravity Flick
    Sensibilidade ajustável, som e pontuação
 ========================================== */
 
@@ -77,7 +77,8 @@ const AIM = {
 const GRAVITY = {
   concurrent: 2,      // alvos caindo ao mesmo tempo
   spawnY: 8.5,        // altura inicial dos alvos
-  size: 0.9,          // diâmetro da esfera
+  size: 0.9,          // diâmetro da esfera (visual)
+  hitRadius: 0.85,    // raio de acerto da mira (maior que o visual = mais perdoador)
   minSpeed: 2.5,      // unidades/s
   maxSpeed: 7,
   rampUp: 0.4,        // até +40% de velocidade ao longo da partida
@@ -114,365 +115,18 @@ function comboMultiplier() {
   return 1 + Math.min(game.combo, 10) * 0.1;
 }
 
-/* ---------- INTERFACE ---------- */
+/* ---------- INTERFACE (elementos definidos no index.html) ---------- */
 
-const uiStyle = document.createElement('style');
-
-uiStyle.textContent = `
-  * { box-sizing: border-box; }
-
-  html, body {
-    width: 100%;
-    height: 100%;
-    margin: 0;
-    overflow: hidden;
-    background: #c6c6c6;
-    font-family: Arial, Helvetica, sans-serif;
-  }
-
-  #world {
-    position: fixed;
-    inset: 0;
-    display: block;
-    width: 100%;
-    height: 100%;
-    outline: none;
-    cursor: crosshair;
-  }
-
-  #simple-hud {
-    position: fixed;
-    top: 14px;
-    left: 14px;
-    z-index: 5;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 7px;
-    pointer-events: none;
-  }
-
-  .hud-box {
-    padding: 9px 11px;
-    background: rgba(25, 30, 35, .84);
-    border: 1px solid rgba(255,255,255,.12);
-    border-radius: 4px;
-    color: #d5dce0;
-    font-size: 10px;
-    font-weight: bold;
-    letter-spacing: .7px;
-  }
-
-  .hud-box strong {
-    margin-left: 5px;
-    color: #00eaff;
-    font-size: 14px;
-  }
-
-  #training-settings {
-    position: fixed;
-    top: 67px;
-    left: 14px;
-    z-index: 8;
-    display: grid;
-    gap: 12px;
-    width: 230px;
-    padding: 14px;
-    color: white;
-    background: rgba(25, 30, 35, .91);
-    border: 1px solid rgba(255,255,255,.14);
-    border-radius: 5px;
-  }
-
-  #training-settings label {
-    display: grid;
-    gap: 7px;
-    font-size: 10px;
-    font-weight: bold;
-    letter-spacing: 1px;
-  }
-
-  #training-settings select {
-    width: 100%;
-    padding: 9px;
-    color: white;
-    background: #343b40;
-    border: 1px solid #59636a;
-    border-radius: 3px;
-    outline-color: #00bfff;
-  }
-
-  .sensitivity-row {
-    display: flex;
-    align-items: center;
-    gap: 9px;
-  }
-
-  #sensitivity-slider {
-    flex: 1;
-    width: 100%;
-    min-width: 0;
-    accent-color: #00bfff;
-    cursor: pointer;
-  }
-
-  #sensitivity-value {
-    min-width: 43px;
-    color: #00efff;
-    text-align: right;
-    font-size: 12px;
-  }
-
-  #sensitivity-reset,
-  #settings-toggle {
-    cursor: pointer;
-  }
-
-  #apply-settings,
-  #settings-toggle,
-  #sensitivity-reset {
-    padding: 9px;
-    border: 0;
-    border-radius: 3px;
-    font-size: 10px;
-    font-weight: bold;
-    letter-spacing: .6px;
-  }
-
-  #apply-settings {
-    color: #07131a;
-    background: #00bfff;
-    cursor: pointer;
-  }
-
-  #apply-settings:hover {
-    background: #00eaff;
-  }
-
-  #settings-toggle {
-    position: fixed;
-    top: 14px;
-    right: 14px;
-    z-index: 9;
-    color: white;
-    background: rgba(25, 30, 35, .86);
-    border: 1px solid rgba(255,255,255,.15);
-  }
-
-  #sensitivity-reset {
-    color: white;
-    background: #41494f;
-  }
-
-  #simple-crosshair {
-    position: fixed;
-    left: 50%;
-    top: 50%;
-    width: 22px;
-    height: 22px;
-    transform: translate(-50%, -50%);
-    z-index: 6;
-    pointer-events: none;
-    transition: transform 70ms ease-out;
-  }
-
-  #simple-crosshair::before,
-  #simple-crosshair::after {
-    content: "";
-    position: absolute;
-    background: #00efff;
-    box-shadow: 1px 1px 1px #111;
-  }
-
-  #simple-crosshair::before {
-    width: 22px;
-    height: 2px;
-    left: 0;
-    top: 10px;
-  }
-
-  #simple-crosshair::after {
-    width: 2px;
-    height: 22px;
-    top: 0;
-    left: 10px;
-  }
-
-  #simple-message {
-    position: fixed;
-    bottom: 15px;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 5;
-    max-width: calc(100% - 24px);
-    padding: 10px 14px;
-    border-radius: 4px;
-    background: rgba(25, 30, 35, .84);
-    color: #f0f3f5;
-    font-size: 12px;
-    text-align: center;
-    pointer-events: none;
-  }
-
-  #simple-end {
-    position: fixed;
-    inset: 0;
-    z-index: 20;
-    display: none;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-    color: white;
-    text-align: center;
-    background: rgba(15, 20, 25, .84);
-    backdrop-filter: blur(5px);
-  }
-
-  #simple-end > div {
-    width: min(420px, 100%);
-    padding: 28px;
-    background: #252b30;
-    border: 1px solid #424b51;
-    border-radius: 7px;
-  }
-
-  #simple-end h1 {
-    font-size: 30px;
-    margin: 0 0 15px;
-  }
-
-  #final-result {
-    line-height: 2;
-    color: #d1d8dc;
-  }
-
-  #final-result strong {
-    color: #00eaff;
-  }
-
-  #simple-end button {
-    margin: 8px 4px 0;
-    padding: 12px 16px;
-    color: #07131a;
-    background: #00bfff;
-    border: 0;
-    border-radius: 3px;
-    font-weight: bold;
-    cursor: pointer;
-  }
-
-  #simple-end button.secondary {
-    color: white;
-    background: #41494f;
-  }
-
-  @media (max-width: 600px) {
-    #simple-hud { top: 8px; left: 8px; gap: 4px; }
-    .hud-box { padding: 7px; font-size: 9px; }
-    .hud-box strong { font-size: 12px; }
-    #training-settings { top: 57px; left: 8px; width: 205px; }
-    #simple-message { bottom: 8px; font-size: 10px; }
-  }
-`;
-
-document.head.appendChild(uiStyle);
-
-/* HUD */
-
-const hud = document.createElement('div');
-hud.id = 'simple-hud';
-hud.innerHTML = `
-  <div class="hud-box">MODO <strong id="hud-mode">FLICK</strong></div>
-  <div class="hud-box">PONTOS <strong id="hud-score">0</strong></div>
-  <div class="hud-box">ACERTOS <strong id="hud-hits">0</strong></div>
-  <div class="hud-box">PRECISÃO <strong id="hud-accuracy">100%</strong></div>
-  <div class="hud-box">TEMPO <strong id="hud-time">60</strong></div>
-  <div class="hud-box" id="hud-combo-box" style="display:none">COMBO <strong id="hud-combo">x1.0</strong></div>
-`;
-
-document.body.appendChild(hud);
-
-/* Configurações */
-
-const settings = document.createElement('div');
-settings.id = 'training-settings';
-
-settings.innerHTML = `
-  <label>
-    MODO DE TREINO
-    <select id="training-mode">
-      <option value="flick">Flick / Speed</option>
-      <option value="tracking">Tracking</option>
-      <option value="debris">Precision Arena</option>
-      <option value="peek">Peeker's Alley (Tac-FPS)</option>
-      <option value="gravity">Gravity Flick</option>
-    </select>
-  </label>
-
-  <label>
-    SENSIBILIDADE DO MOUSE
-    <div class="sensitivity-row">
-      <input
-        id="sensitivity-slider"
-        type="range"
-        min="0.0005"
-        max="0.0100"
-        step="0.0001"
-        value="0.0020"
-      >
-      <span id="sensitivity-value">0.20</span>
-    </div>
-  </label>
-
-  <button id="sensitivity-reset" type="button">
-    RESETAR SENSIBILIDADE
-  </button>
-
-  <label>
-    DURAÇÃO DA PARTIDA
-    <select id="training-duration">
-      <option value="30">30 segundos</option>
-      <option value="60" selected>60 segundos</option>
-      <option value="90">90 segundos</option>
-      <option value="120">120 segundos</option>
-    </select>
-  </label>
-
-  <button id="apply-settings" type="button">
-    APLICAR CONFIGURAÇÕES
-  </button>
-`;
-
-document.body.appendChild(settings);
-
-const settingsToggle = document.createElement('button');
-settingsToggle.id = 'settings-toggle';
-settingsToggle.textContent = 'OCULTAR CONFIGURAÇÕES';
-document.body.appendChild(settingsToggle);
-
-const crosshair = document.createElement('div');
-crosshair.id = 'simple-crosshair';
-document.body.appendChild(crosshair);
-
-const message = document.createElement('div');
-message.id = 'simple-message';
-message.textContent =
-  'Clique na arena para capturar o mouse · WASD para mover · Tracking: mantenha a mira na bolinha';
-document.body.appendChild(message);
-
-const endScreen = document.createElement('div');
-endScreen.id = 'simple-end';
-endScreen.innerHTML = `
-  <div>
-    <h1>TREINO FINALIZADO</h1>
-    <p id="final-result"></p>
-    <button id="restart-game">JOGAR NOVAMENTE</button>
-  </div>
-`;
-document.body.appendChild(endScreen);
+const settings = $('#training-settings');
+const settingsToggle = $('#settings-toggle');
+const crosshair = $('#simple-crosshair');
+const message = $('#simple-message');
+const endScreen = $('#simple-end');
 
 settingsToggle.addEventListener('click', () => {
   const hidden = settings.style.display === 'none';
   settings.style.display = hidden ? 'grid' : 'none';
+  settingsToggle.setAttribute('aria-expanded', String(hidden));
   settingsToggle.textContent = hidden
     ? 'OCULTAR CONFIGURAÇÕES'
     : 'MOSTRAR CONFIGURAÇÕES';
@@ -1118,10 +772,11 @@ function aimDistanceTo(point) {
 }
 
 /* Alvo esférico mais próximo da mira dentro da tolerância */
-function findSphereWithTolerance() {
+function findSphereWithTolerance(
+  limit = AIM.sphereRadius * AIM.sphereTolerance
+) {
   raycaster.setFromCamera(screenCenter, camera);
 
-  const limit = AIM.sphereRadius * AIM.sphereTolerance;
   let best = null;
   let bestDist = Infinity;
 
@@ -1311,7 +966,9 @@ function shoot() {
 
     // Tolerância: se a mira passou perto, conta como acerto
     if (!hitTarget) {
-      hitTarget = findSphereWithTolerance();
+      hitTarget = trainingMode === 'gravity'
+        ? findSphereWithTolerance(GRAVITY.hitRadius)
+        : findSphereWithTolerance();
     }
   }
 
@@ -1451,13 +1108,73 @@ window.addEventListener('blur', () => {
 
 const sensitivitySlider = $('#sensitivity-slider');
 const sensitivityValue = $('#sensitivity-value');
+const sensitivityUnit = $('#sensitivity-unit');
+
+/* Escalas de sensibilidade.
+   factor = radianos de giro por "pixel" do mouse para cada 1.0 de sens.
+   CS2: yaw 0.022°/count · Valorant: yaw 0.07°/count */
+const DEG = Math.PI / 180;
+
+const SENS_UNITS = {
+  game: {
+    factor: 1,
+    min: 0.0005,
+    max: 0.01,
+    step: 0.0001,
+    display: (v) => (v * 100).toFixed(2)
+  },
+  cs: {
+    factor: 0.022 * DEG,
+    min: 0.2,
+    max: 10,
+    step: 0.01,
+    display: (v) => v.toFixed(2)
+  },
+  valorant: {
+    factor: 0.07 * DEG,
+    min: 0.05,
+    max: 3.2,
+    step: 0.01,
+    display: (v) => v.toFixed(3)
+  }
+};
+
+const DEFAULT_SENSITIVITY = 0.002;
+
+function currentUnit() {
+  return SENS_UNITS[sensitivityUnit.value];
+}
 
 function updateSensitivity() {
-  mouseSensitivity = Number(sensitivitySlider.value);
+  const unit = currentUnit();
+  const value = Number(sensitivitySlider.value);
 
-  sensitivityValue.textContent =
-    (mouseSensitivity * 100).toFixed(2);
+  mouseSensitivity = value * unit.factor;
+  sensitivityValue.textContent = unit.display(value);
 }
+
+/* Coloca o slider no valor equivalente a uma sensibilidade em radianos */
+function setSliderFromRadians(radians) {
+  const unit = currentUnit();
+
+  sensitivitySlider.value = String(
+    THREE.MathUtils.clamp(radians / unit.factor, unit.min, unit.max)
+  );
+
+  updateSensitivity();
+}
+
+/* Ao trocar a escala, mantém a mesma sensação e só converte o número */
+sensitivityUnit.addEventListener('change', () => {
+  const unit = currentUnit();
+  const radians = mouseSensitivity;
+
+  sensitivitySlider.min = String(unit.min);
+  sensitivitySlider.max = String(unit.max);
+  sensitivitySlider.step = String(unit.step);
+
+  setSliderFromRadians(radians);
+});
 
 sensitivitySlider.addEventListener(
   'input',
@@ -1465,8 +1182,7 @@ sensitivitySlider.addEventListener(
 );
 
 $('#sensitivity-reset').addEventListener('click', () => {
-  sensitivitySlider.value = '0.0020';
-  updateSensitivity();
+  setSliderFromRadians(DEFAULT_SENSITIVITY);
 });
 
 /* ---------- TROCA DE MODO E DURAÇÃO ---------- */
@@ -1603,7 +1319,6 @@ $('#restart-game').addEventListener(
   'click',
   restartGame
 );
-
 
 /* ---------- LOOP DO JOGO ---------- */
 
