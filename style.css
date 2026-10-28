@@ -1,7 +1,3 @@
-/* =====================================
-   DEBRIS ARENA — ESTILO MINIMALISTA
-===================================== */
-
 :root {
   --background: #c6c6c6;
   --blue: #00bfff;
@@ -36,7 +32,6 @@ body {
   -webkit-user-select: none;
 }
 
-/* Texto só para leitores de tela */
 .sr-only {
   position: absolute;
   width: 1px;
@@ -49,8 +44,6 @@ body {
   border: 0;
 }
 
-/* ===== CANVAS 3D ===== */
-
 #world {
   display: block;
   position: fixed;
@@ -61,8 +54,6 @@ body {
   cursor: crosshair;
   z-index: 0;
 }
-
-/* ===== HUD SUPERIOR ===== */
 
 #simple-hud {
   position: fixed;
@@ -97,12 +88,10 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
-/* O combo só aparece no Peeker's Alley (o JS alterna o display) */
-#hud-combo-box {
+#hud-combo-box,
+#hud-missed-box {
   display: none;
 }
-
-/* ===== PAINEL DE CONFIGURAÇÕES ===== */
 
 #training-settings {
   position: fixed;
@@ -166,8 +155,6 @@ body {
   -webkit-user-select: text;
 }
 
-/* ===== BOTÕES DO PAINEL ===== */
-
 #sensitivity-reset,
 #settings-toggle {
   cursor: pointer;
@@ -209,8 +196,6 @@ body {
   background: var(--button-dark);
 }
 
-/* ===== MIRA CENTRAL ===== */
-
 #simple-crosshair {
   position: fixed;
   left: 50%;
@@ -245,8 +230,6 @@ body {
   left: 10px;
 }
 
-/* ===== INSTRUÇÕES ===== */
-
 #simple-message {
   position: fixed;
   bottom: 15px;
@@ -264,8 +247,6 @@ body {
   white-space: nowrap;
   pointer-events: none;
 }
-
-/* ===== TELA DE RESULTADO ===== */
 
 #simple-end {
   position: fixed;
@@ -336,8 +317,6 @@ body {
 #simple-end button:active {
   transform: translateY(0);
 }
-
-/* ===== RESPONSIVIDADE ===== */
 
 @media (max-width: 600px) {
   #simple-hud {
