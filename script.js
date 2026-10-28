@@ -1078,6 +1078,9 @@ document.addEventListener('mousemove', (event) => {
 window.addEventListener('keydown', (event) => {
   const key = event.key.toLowerCase();
 
+  // Dentro de campos do painel (número, slider, select) as teclas funcionam normalmente.
+  if (event.target.closest?.('input, select, textarea')) return;
+
   game.keys.add(key);
 
   if (
@@ -1118,23 +1121,29 @@ const DEG = Math.PI / 180;
 const SENS_UNITS = {
   game: {
     factor: 1,
+    scale: 100,
     min: 0.0005,
     max: 0.01,
     step: 0.0001,
+    digits: 2,
     display: (v) => (v * 100).toFixed(2)
   },
   cs: {
     factor: 0.022 * DEG,
+    scale: 1,
     min: 0.2,
     max: 10,
     step: 0.01,
+    digits: 2,
     display: (v) => v.toFixed(2)
   },
   valorant: {
     factor: 0.07 * DEG,
+    scale: 1,
     min: 0.05,
     max: 3.2,
     step: 0.01,
+    digits: 3,
     display: (v) => v.toFixed(3)
   }
 };
@@ -1150,7 +1159,7 @@ function updateSensitivity() {
   const value = Number(sensitivitySlider.value);
 
   mouseSensitivity = value * unit.factor;
-  sensitivityValue.textContent = unit.display(value);
+  sensitivityValue.value = unit.display(value);
 }
 
 /* Coloca o slider no valor equivalente a uma sensibilidade em radianos */
@@ -1173,7 +1182,27 @@ sensitivityUnit.addEventListener('change', () => {
   sensitivitySlider.max = String(unit.max);
   sensitivitySlider.step = String(unit.step);
 
+  // Campo numérico na mesma escala exibida (ex.: CS:GO 0.89)
+  const fix = (n) => String(Number((n * unit.scale).toFixed(4)));
+  sensitivityValue.min = fix(unit.min);
+  sensitivityValue.max = fix(unit.max);
+  sensitivityValue.step = fix(unit.step);
+
   setSliderFromRadians(radians);
+});
+
+/* Digitar o valor exato (ex.: 0.89) e confirmar com Enter ou ao sair do campo */
+sensitivityValue.addEventListener('change', () => {
+  const unit = currentUnit();
+  const typed = Number(sensitivityValue.value.replace(',', '.'));
+
+  if (Number.isFinite(typed) && typed > 0) {
+    sensitivitySlider.value = String(
+      THREE.MathUtils.clamp(typed / unit.scale, unit.min, unit.max)
+    );
+  }
+
+  updateSensitivity();
 });
 
 sensitivitySlider.addEventListener(
