@@ -88,6 +88,14 @@ const GRAVITY = {
   missPenalty: 50     // pontos perdidos quando o bloco toca o chão
 };
 
+/* Flick: a bolinha fica parada e vai desaparecendo com o tempo */
+const FLICK = {
+  lifetime: 2500,   // ms até a bolinha sumir sozinha
+  fadeStart: 0.3,   // começa a ficar transparente após 30% da vida
+  missPenalty: 50,  // pontos perdidos quando ela some sem ser acertada
+  speedBonus: 50    // bônus máximo por acertar com ela ainda bem visível
+};
+
 /* Layout do Peeker's Alley */
 const PEEK = {
   wallZ: -6,
@@ -333,7 +341,7 @@ const enemyHeadGeometry = new THREE.SphereGeometry(0.2, 20, 14);
 const raycaster = new THREE.Raycaster();
 const screenCenter = new THREE.Vector2(0, 0);
 
-function spawnTarget() {
+function spawnTarget(initialAge = 0) {
   if (!game.running) return;
 
   const target = new THREE.Group();
@@ -342,14 +350,16 @@ function spawnTarget() {
     color: 0xff102d,
     emissive: 0x650010,
     emissiveIntensity: 0.45,
-    roughness: 0.3
+    roughness: 0.3,
+    transparent: trainingMode === 'flick'
   });
 
   const sphere = new THREE.Mesh(targetGeometry, material);
   target.add(sphere);
 
   const ringMaterial = new THREE.MeshBasicMaterial({
-    color: 0xff7585
+    color: 0xff7585,
+    transparent: trainingMode === 'flick'
   });
 
   const ring = new THREE.Mesh(targetRingGeometry, ringMaterial);
@@ -367,7 +377,8 @@ function spawnTarget() {
   target.userData.baseY = y;
   target.userData.phase = Math.random() * Math.PI * 2;
   target.userData.speed = THREE.MathUtils.randFloat(0.8, 1.5);
-  target.userData.born = performance.now();
+  target.userData.born = performance.now() - initialAge;
+  target.userData.fadeMaterials = [material, ringMaterial];
 
   // Estado inicial do movimento do Tracking.
   target.userData.moveFrom = target.position.clone();
@@ -631,7 +642,8 @@ function resetTargets() {
   const count = trainingMode === 'tracking' ? 1 : 5;
 
   for (let i = 0; i < count; i++) {
-    spawnTarget();
+    // No Flick, cada alvo começa com idade diferente para não sumirem todos juntos.
+    spawnTarget(trainingMode === 'flick' ? i * (FLICK.lifetime / count) * 0.8 : 0);
   }
 }
 
@@ -1010,7 +1022,15 @@ function shoot() {
           GRAVITY.baseScore + hitTarget.userData.speed * GRAVITY.speedBonus
         );
       } else {
-        game.score += trainingMode === 'debris' ? 150 : 100;
+        if (trainingMode === 'flick') {
+          const remaining = 1 - (now - hitTarget.userData.born) / FLICK.lifetime;
+
+          game.score += 100 + Math.round(
+            THREE.MathUtils.clamp(remaining, 0, 1) * FLICK.speedBonus
+          );
+        } else {
+          game.score += trainingMode === 'debris' ? 150 : 100;
+        }
       }
     }
 
@@ -1077,6 +1097,10 @@ function lockedMessage() {
 
   if (trainingMode === 'gravity') {
     return 'GRAVITY FLICK · Acerte os alvos antes que toquem o chão · Rápidos valem mais';
+  }
+
+  if (trainingMode === 'flick') {
+    return 'FLICK · Acerte antes que a bolinha desapareça · Quanto mais rápido, mais pontos';
   }
 
   return 'WASD para mover · Mouse para mirar · Clique para acertar';
@@ -1292,7 +1316,7 @@ $('#apply-settings').addEventListener('click', () => {
   updateHUD();
 
   message.textContent = {
-    flick: 'FLICK / SPEED · Alvos parados para treinar movimentos rápidos',
+    flick: 'FLICK / SPEED · Alvos parados que desaparecem com o tempo; acerte rápido',
     tracking: 'TRACKING · Siga a única bolinha com a mira; não precisa clicar',
     debris: 'PRECISION ARENA · Treino livre de precisão',
     peek: 'PEEKER\'S ALLEY · Alvos aparecem nas quinas por ~1s; em pé ou agachados',
@@ -1355,6 +1379,7 @@ function finishGame() {
       }</strong><br>
        Pontuação: <strong>${Math.floor(game.score)}</strong><br>
        Acertos: <strong>${game.hits}</strong><br>
+       ${trainingMode === 'flick' ? `Sumiram: <strong>${game.escaped}</strong><br>` : ''}
        Erros: <strong>${game.misses}</strong><br>
        Precisão: <strong>${accuracy}%</strong>`;
   }
@@ -1507,9 +1532,28 @@ function animate(now) {
         }
 
         if (trainingMode === 'flick') {
-          // Alvos estáticos para Flick.
+          // Alvos estáticos que vão desaparecendo com o tempo.
           target.position.x = data.baseX;
           target.position.y = data.baseY;
+
+          const life = (now - data.born) / FLICK.lifetime;
+
+          if (life >= 1) {
+            // Sumiu sem ser acertado: perde pontos e nasce outro.
+            game.escaped++;
+            game.score = Math.max(0, game.score - FLICK.missPenalty);
+            removeTarget(target);
+            spawnTarget();
+            continue;
+          }
+
+          const fade = life < FLICK.fadeStart
+            ? 1
+            : 1 - (life - FLICK.fadeStart) / (1 - FLICK.fadeStart);
+
+          data.fadeMaterials.forEach((material) => {
+            material.opacity = fade;
+          });
 
         } else if (trainingMode === 'tracking') {
           // Tracking: movimento imprevisível, suave e com
