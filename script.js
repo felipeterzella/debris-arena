@@ -14,8 +14,6 @@ const game = {
   misses: 0,
   escaped: 0,
   headshots: 0,
-  combo: 0,
-  bestCombo: 0,
   time: 60,
   duration: 60,
   running: true,
@@ -61,16 +59,13 @@ const AIM = {
 };
 
 const GRAVITY = {
-  concurrent: 2,
+  concurrent: 3,
   spawnY: 8.5,
   size: 0.9,
   hitRadius: 0.85,
-  minSpeed: 2.5,
-  maxSpeed: 7,
-  rampUp: 0.4,
+  speed: 3.5,
   minGapX: 2.5,
   baseScore: 100,
-  speedBonus: 10,
   missPenalty: 50
 };
 
@@ -103,10 +98,6 @@ const PEEK = {
   escapePenalty: 100,
   concurrent: 2
 };
-
-function comboMultiplier() {
-  return 1 + Math.min(game.combo, 10) * 0.1;
-}
 
 const settings = $('#training-settings');
 const settingsToggle = $('#settings-toggle');
@@ -476,7 +467,6 @@ function updatePeeker(enemy, now) {
     }
 
     case 'hold': {
-
       enemy.position.x = data.visibleX;
 
       if (now >= data.phaseEnd) {
@@ -504,9 +494,7 @@ function updatePeeker(enemy, now) {
       );
 
       if (p >= 1) {
-
         game.escaped++;
-        game.combo = 0;
         game.score = Math.max(0, game.score - PEEK.escapePenalty);
         removeTarget(enemy);
         spawnPeeker(
@@ -553,11 +541,7 @@ function spawnGravityBlock(extraHeight = 0) {
 
   block.position.set(x, y, z);
 
-  const progress = 1 - game.time / game.duration;
-  const ramp = 1 + THREE.MathUtils.clamp(progress, 0, 1) * GRAVITY.rampUp;
-
-  block.userData.speed =
-    THREE.MathUtils.randFloat(GRAVITY.minSpeed, GRAVITY.maxSpeed) * ramp;
+  block.userData.speed = GRAVITY.speed;
 
   targetGroup.add(block);
   game.targets.push(block);
@@ -607,7 +591,6 @@ function resetTargets() {
       : 5;
 
   for (let i = 0; i < count; i++) {
-
     spawnTarget(trainingMode === 'flick' ? i * (FLICK.lifetime / count) * 0.8 : 0);
   }
 }
@@ -705,8 +688,6 @@ const hudEls = {
   hits: $('#hud-hits'),
   accuracy: $('#hud-accuracy'),
   time: $('#hud-time'),
-  combo: $('#hud-combo'),
-  comboBox: $('#hud-combo-box'),
   missed: $('#hud-missed'),
   missedBox: $('#hud-missed-box')
 };
@@ -745,14 +726,8 @@ function updateHUD() {
   setHud(hudEls.accuracy, `${accuracy}%`);
   setHud(hudEls.time, Math.ceil(Math.max(0, game.time)));
 
-  const comboDisplay = trainingMode === 'peek' ? 'block' : 'none';
-  if (hudEls.comboBox.style.display !== comboDisplay) {
-    hudEls.comboBox.style.display = comboDisplay;
-  }
-
-  setHud(hudEls.combo, `x${comboMultiplier().toFixed(1)}`);
-
-  const missedDisplay = trainingMode === 'flick' ? 'block' : 'none';
+  const missedDisplay =
+    trainingMode === 'flick' || trainingMode === 'gravity' ? 'block' : 'none';
   if (hudEls.missedBox.style.display !== missedDisplay) {
     hudEls.missedBox.style.display = missedDisplay;
   }
@@ -806,7 +781,6 @@ function findPeekWithTolerance(wallDistance) {
       const limit = isHead ? headLimit : bodyLimit;
 
       if (d <= limit) {
-
         const score = d / limit - (isHead ? 0.25 : 0);
         if (score < bestScore) {
           bestScore = score;
@@ -909,7 +883,6 @@ function shoot() {
   let headshot = false;
 
   if (trainingMode === 'peek') {
-
     const peekTargets = game.targets.filter(
       (t) => t.userData.phase !== 'wait'
     );
@@ -961,29 +934,19 @@ function shoot() {
     game.hits++;
 
     if (trainingMode === 'peek') {
-      const base = headshot ? PEEK.headshotBase : PEEK.bodyBase;
-
-      game.combo++;
-      game.bestCombo = Math.max(game.bestCombo, game.combo);
-      game.score += base * comboMultiplier();
+      game.score += headshot ? PEEK.headshotBase : PEEK.bodyBase;
 
       if (headshot) game.headshots++;
-    } else {
-      if (trainingMode === 'gravity') {
-        game.score += Math.round(
-          GRAVITY.baseScore + hitTarget.userData.speed * GRAVITY.speedBonus
-        );
-      } else {
-        if (trainingMode === 'flick') {
-          const remaining = 1 - (now - hitTarget.userData.born) / FLICK.lifetime;
+    } else if (trainingMode === 'gravity') {
+      game.score += GRAVITY.baseScore;
+    } else if (trainingMode === 'flick') {
+      const remaining = 1 - (now - hitTarget.userData.born) / FLICK.lifetime;
 
-          game.score += 100 + Math.round(
-            THREE.MathUtils.clamp(remaining, 0, 1) * FLICK.speedBonus
-          );
-        } else {
-          game.score += trainingMode === 'debris' ? 150 : 100;
-        }
-      }
+      game.score += 100 + Math.round(
+        THREE.MathUtils.clamp(remaining, 0, 1) * FLICK.speedBonus
+      );
+    } else {
+      game.score += trainingMode === 'debris' ? 150 : 100;
     }
 
     playHitSound();
@@ -1040,11 +1003,11 @@ function lockedMessage() {
   }
 
   if (trainingMode === 'peek') {
-    return 'FPS · Mire nas quinas · Headshot vale 3x · Deixar o alvo sumir quebra o combo';
+    return 'FPS · Mire nas quinas · Headshot vale 3x · Deixar o alvo sumir tira pontos';
   }
 
   if (trainingMode === 'gravity') {
-    return 'GRAVITY FLICK · Acerte os alvos antes que toquem o chão · Rápidos valem mais';
+    return 'GRAVITY FLICK · Acerte os alvos antes que toquem o chão · Perder tira pontos';
   }
 
   if (trainingMode === 'flick') {
@@ -1236,8 +1199,6 @@ $('#apply-settings').addEventListener('click', () => {
   game.misses = 0;
   game.escaped = 0;
   game.headshots = 0;
-  game.combo = 0;
-  game.bestCombo = 0;
   game.lastShot = 0;
   game.trackingTime = 0;
   game.trackingChecks = 0;
@@ -1290,7 +1251,7 @@ function finishGame() {
       `Modo: <strong>GRAVITY FLICK</strong><br>
        Pontuação: <strong>${Math.floor(game.score)}</strong><br>
        Alvos destruídos: <strong>${game.hits}</strong><br>
-       Caíram no chão: <strong>${game.escaped}</strong><br>
+       Perdidas: <strong>${game.escaped}</strong><br>
        Tiros errados: <strong>${game.misses}</strong><br>
        Precisão: <strong>${accuracy}%</strong>`;
   } else if (trainingMode === 'peek') {
@@ -1299,7 +1260,6 @@ function finishGame() {
        Pontuação: <strong>${Math.floor(game.score)}</strong><br>
        Abates: <strong>${game.hits}</strong> (headshots: <strong>${game.headshots}</strong>)<br>
        Sumiram sem levar tiro: <strong>${game.escaped}</strong><br>
-       Melhor combo: <strong>${game.bestCombo}</strong><br>
        Tiros errados: <strong>${game.misses}</strong><br>
        Precisão: <strong>${accuracy}%</strong>`;
   } else {
@@ -1323,8 +1283,6 @@ function restartGame() {
   game.misses = 0;
   game.escaped = 0;
   game.headshots = 0;
-  game.combo = 0;
-  game.bestCombo = 0;
   game.time = game.duration;
   game.running = true;
   game.lastShot = 0;
@@ -1369,7 +1327,6 @@ function animate(now) {
       updateHUD();
       finishGame();
     } else {
-
       const forward = new THREE.Vector3(
         -Math.sin(yaw),
         0,
@@ -1433,7 +1390,7 @@ function animate(now) {
         collideWithPeekWalls();
       }
 
-      for (const target of game.targets) {
+      for (const target of [...game.targets]) {
         const data = target.userData;
         const t = now / 1000;
 
@@ -1456,14 +1413,12 @@ function animate(now) {
         }
 
         if (trainingMode === 'flick') {
-
           target.position.x = data.baseX;
           target.position.y = data.baseY;
 
           const life = (now - data.born) / FLICK.lifetime;
 
           if (life >= 1) {
-
             game.escaped++;
             game.score = Math.max(0, game.score - FLICK.missPenalty);
             removeTarget(target);
@@ -1480,7 +1435,6 @@ function animate(now) {
           });
 
         } else if (trainingMode === 'tracking') {
-
           if (
             !data.moveFrom ||
             !data.moveTo ||
@@ -1567,7 +1521,6 @@ function animate(now) {
             Math.sin(now * 0.004 + data.phase) * 0.012;
 
         } else {
-
           target.position.x =
             data.baseX +
             Math.sin(t * 0.7 * data.speed + data.phase) * 0.8;
