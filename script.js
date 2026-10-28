@@ -149,7 +149,8 @@ camera.rotation.order = 'YXZ';
 
 const renderer = new THREE.WebGLRenderer({
   canvas,
-  antialias: true
+  antialias: true,
+  powerPreference: 'high-performance'
 });
 
 renderer.setPixelRatio(
@@ -727,6 +728,23 @@ const MODE_LABELS = {
   gravity: 'GRAVITY'
 };
 
+/* Elementos do HUD guardados uma vez (evita buscar no DOM a cada frame) */
+const hudEls = {
+  mode: $('#hud-mode'),
+  score: $('#hud-score'),
+  hits: $('#hud-hits'),
+  accuracy: $('#hud-accuracy'),
+  time: $('#hud-time'),
+  combo: $('#hud-combo'),
+  comboBox: $('#hud-combo-box')
+};
+
+/* Só escreve no DOM se o texto realmente mudou (evita recalcular layout todo frame) */
+function setHud(element, text) {
+  const value = String(text);
+  if (element.textContent !== value) element.textContent = value;
+}
+
 function updateHUD() {
   const total = game.hits + game.misses;
 
@@ -747,19 +765,22 @@ function updateHUD() {
           : 100
       );
 
-  $('#hud-mode').textContent = MODE_LABELS[trainingMode];
+  setHud(hudEls.mode, MODE_LABELS[trainingMode]);
 
   // Pontuação sempre inteira, sem casas decimais.
   game.score = Math.max(0, Math.round(game.score));
-  $('#hud-score').textContent = game.score.toLocaleString('pt-BR');
+  setHud(hudEls.score, game.score.toLocaleString('pt-BR'));
 
-  $('#hud-hits').textContent = Math.floor(game.hits);
-  $('#hud-accuracy').textContent = `${accuracy}%`;
-  $('#hud-time').textContent = Math.ceil(Math.max(0, game.time));
+  setHud(hudEls.hits, Math.floor(game.hits));
+  setHud(hudEls.accuracy, `${accuracy}%`);
+  setHud(hudEls.time, Math.ceil(Math.max(0, game.time)));
 
-  $('#hud-combo-box').style.display =
-    trainingMode === 'peek' ? 'block' : 'none';
-  $('#hud-combo').textContent = `x${comboMultiplier().toFixed(1)}`;
+  const comboDisplay = trainingMode === 'peek' ? 'block' : 'none';
+  if (hudEls.comboBox.style.display !== comboDisplay) {
+    hudEls.comboBox.style.display = comboDisplay;
+  }
+
+  setHud(hudEls.combo, `x${comboMultiplier().toFixed(1)}`);
 }
 
 /* ---------- TOLERÂNCIA DA MIRA E DESTINOS DO TRACKING ---------- */
@@ -1020,11 +1041,25 @@ function updateCamera() {
   camera.rotation.set(pitch, yaw, 0, 'YXZ');
 }
 
+/* Captura o mouse usando movimento bruto (sem aceleração do sistema).
+   Se o navegador não suportar, usa a captura normal. */
+function lockPointer() {
+  try {
+    const request = canvas.requestPointerLock?.({ unadjustedMovement: true });
+
+    if (request?.catch) {
+      request.catch(() => canvas.requestPointerLock?.());
+    }
+  } catch {
+    canvas.requestPointerLock?.();
+  }
+}
+
 canvas.addEventListener('click', () => {
   if (!game.running) return;
 
   if (document.pointerLockElement !== canvas) {
-    canvas.requestPointerLock?.();
+    lockPointer();
     return;
   }
 
@@ -1354,7 +1389,7 @@ function restartGame() {
 
   previousTime = performance.now();
 
-  canvas.requestPointerLock?.();
+  lockPointer();
 }
 
 $('#restart-game').addEventListener(
