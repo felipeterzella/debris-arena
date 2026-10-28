@@ -75,13 +75,14 @@
       <span class="sensitivity-row">
         <input
           id="sensitivity-slider"
+          aria-label="Ajuste da sensibilidade"
           type="range"
           min="0.0005"
           max="0.0100"
           step="0.0001"
           value="0.0020"
         >
-        <output id="sensitivity-value" for="sensitivity-slider">0.20</output>
+        <input id="sensitivity-value" type="number" inputmode="decimal" min="0.05" max="1" step="0.01" value="0.20" aria-label="Valor da sensibilidade">
       </span>
     </label>
 
