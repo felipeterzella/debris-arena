@@ -75,7 +75,7 @@ const GRAVITY = {
 };
 
 const FLICK = {
-  lifetime: 3000,
+  lifetime: 2750,
   fadeStart: 0.3,
   missPenalty: 50,
   speedBonus: 50
