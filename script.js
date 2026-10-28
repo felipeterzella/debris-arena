@@ -1,14 +1,5 @@
 import * as THREE from 'three';
 
-/* ==========================================
-   PRECISION ARENA — AIM TRAINER 3D
-   Modos: Flick, Tracking, Precision Arena,
-   Peeker's Alley (Tac-FPS) e Gravity Flick
-   Sensibilidade ajustável, som e pontuação
-========================================== */
-
-/* ---------- CONFIGURAÇÕES ---------- */
-
 const canvas = document.querySelector('#world');
 
 if (!canvas) {
@@ -43,7 +34,6 @@ let pitch = 0;
 let audioContext = null;
 let previousTime = performance.now();
 
-/* Dimensões da arena (menor que a versão anterior) */
 const ARENA = {
   halfWidth: 14,
   backZ: -16,
@@ -53,7 +43,6 @@ const ARENA = {
   maxZ: 9
 };
 
-/* Limites do Tracking */
 const TRACK = {
   minX: -7,
   maxX: 7,
@@ -62,41 +51,36 @@ const TRACK = {
   z: -11
 };
 
-/* Proporção do movimento do Tracking: 0.6 = 60% horizontal / 40% vertical */
 const TRACK_H_SHARE = 0.6;
 
-/* Tolerância da mira (1 = hitbox exata; maior = mais perdoador) */
 const AIM = {
   sphereRadius: 0.48,
-  sphereTolerance: 1.6,  // Flick / Precision / Tracking
-  headTolerance: 1.8,    // cabeça do Peeker
-  bodyTolerance: 1.5     // corpo do Peeker
+  sphereTolerance: 1.6,
+  headTolerance: 1.8,
+  bodyTolerance: 1.5
 };
 
-/* Gravity Flick: blocos caem de cima e precisam ser acertados antes do chão */
 const GRAVITY = {
-  concurrent: 2,      // alvos caindo ao mesmo tempo
-  spawnY: 8.5,        // altura inicial dos alvos
-  size: 0.9,          // diâmetro da esfera (visual)
-  hitRadius: 0.85,    // raio de acerto da mira (maior que o visual = mais perdoador)
-  minSpeed: 2.5,      // unidades/s
+  concurrent: 2,
+  spawnY: 8.5,
+  size: 0.9,
+  hitRadius: 0.85,
+  minSpeed: 2.5,
   maxSpeed: 7,
-  rampUp: 0.4,        // até +40% de velocidade ao longo da partida
-  minGapX: 2.5,       // distância horizontal mínima entre alvos
+  rampUp: 0.4,
+  minGapX: 2.5,
   baseScore: 100,
-  speedBonus: 10,     // bônus = velocidade × 10 (blocos rápidos valem mais)
-  missPenalty: 50     // pontos perdidos quando o bloco toca o chão
+  speedBonus: 10,
+  missPenalty: 50
 };
 
-/* Flick: a bolinha fica parada e vai desaparecendo com o tempo */
 const FLICK = {
-  lifetime: 2500,   // ms até a bolinha sumir sozinha
-  fadeStart: 0.3,   // começa a ficar transparente após 30% da vida
-  missPenalty: 50,  // pontos perdidos quando ela some sem ser acertada
-  speedBonus: 50    // bônus máximo por acertar com ela ainda bem visível
+  lifetime: 3000,
+  fadeStart: 0.3,
+  missPenalty: 50,
+  speedBonus: 50
 };
 
-/* Layout do Peeker's Alley */
 const PEEK = {
   wallZ: -6,
   wallXs: [-9, -3, 3, 9],
@@ -104,26 +88,24 @@ const PEEK = {
   wallHeight: 4.2,
   wallDepth: 0.6,
   enemyZ: -8.6,
-  outTime: 100,          // tempo para "abrir o pixel"
-  inTime: 100,           // tempo para voltar ao esconderijo
-  holdMin: 1000,         // duração do alvo (lifespan): 1.0s a 1.2s
+  outTime: 100,
+  inTime: 100,
+  holdMin: 1000,
   holdMax: 1200,
-  respawnMin: 200,       // intervalo de respawn: 0.2s a 0.3s
+  respawnMin: 200,
   respawnMax: 300,
-  crouchChance: 0.4,     // chance de o bot estar agachado
-  cornerOffsetMin: 0.32, // distância do centro do bot até a quina (rente à parede)
-  cornerOffsetMax: 0.7,  // variação do ângulo lateral
-  headshotBase: 300,     // headshot = 3x o corpo
+  crouchChance: 0.4,
+  cornerOffsetMin: 0.32,
+  cornerOffsetMax: 0.7,
+  headshotBase: 300,
   bodyBase: 100,
-  escapePenalty: 100,    // pontos perdidos quando o alvo some sem levar tiro
+  escapePenalty: 100,
   concurrent: 2
 };
 
 function comboMultiplier() {
   return 1 + Math.min(game.combo, 10) * 0.1;
 }
-
-/* ---------- INTERFACE (elementos definidos no index.html) ---------- */
 
 const settings = $('#training-settings');
 const settingsToggle = $('#settings-toggle');
@@ -139,8 +121,6 @@ settingsToggle.addEventListener('click', () => {
     ? 'OCULTAR CONFIGURAÇÕES'
     : 'MOSTRAR CONFIGURAÇÕES';
 });
-
-/* ---------- CENA THREE.JS ---------- */
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xc6c6c6);
@@ -172,8 +152,6 @@ renderer.setSize(
 
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 
-/* ---------- ILUMINAÇÃO ---------- */
-
 scene.add(
   new THREE.HemisphereLight(0xffffff, 0x858585, 2.2)
 );
@@ -185,8 +163,6 @@ const directionalLight = new THREE.DirectionalLight(
 
 directionalLight.position.set(-8, 18, 10);
 scene.add(directionalLight);
-
-/* ---------- ARENA (REDUZIDA) ---------- */
 
 const arenaWidth = ARENA.halfWidth * 2;
 const arenaDepth = ARENA.frontZ - ARENA.backZ;
@@ -240,8 +216,6 @@ rightWall.rotation.y = -Math.PI / 2;
 rightWall.position.set(ARENA.halfWidth, 7, arenaCenterZ);
 scene.add(rightWall);
 
-/* ---------- MARCAÇÕES DA ARENA ---------- */
-
 const blueMaterial = new THREE.MeshBasicMaterial({
   color: 0x00bfff
 });
@@ -260,8 +234,6 @@ function makeLine(width, height, depth, x, y, z) {
 makeLine(arenaWidth, 0.055, 0.055, 0, 0.04, ARENA.backZ + 0.05);
 makeLine(arenaWidth, 0.035, 0.07, 0, 0.025, -2);
 makeLine(arenaWidth, 0.035, 0.07, 0, 0.025, 6);
-
-/* ---------- PAREDES DO PEEKER'S ALLEY ---------- */
 
 const peekWalls = new THREE.Group();
 peekWalls.visible = false;
@@ -304,7 +276,6 @@ PEEK.wallXs.forEach((cx) => {
   });
 });
 
-/* Cantos disponíveis: 4 paredes × 2 lados */
 const peekCorners = [];
 
 PEEK.wallXs.forEach((cx) => {
@@ -312,8 +283,6 @@ PEEK.wallXs.forEach((cx) => {
     peekCorners.push({ cx, side });
   });
 });
-
-/* ---------- ALVOS ---------- */
 
 const targetGroup = new THREE.Group();
 scene.add(targetGroup);
@@ -327,14 +296,12 @@ const targetRingGeometry = new THREE.TorusGeometry(
   28
 );
 
-/* Alvo redondo do Gravity Flick */
 const gravityBlockGeometry = new THREE.SphereGeometry(
   GRAVITY.size / 2,
   28,
   20
 );
 
-/* Inimigo do Peeker's Alley */
 const enemyBodyGeometry = new THREE.CapsuleGeometry(0.28, 0.9, 6, 14);
 const enemyHeadGeometry = new THREE.SphereGeometry(0.2, 20, 14);
 
@@ -380,7 +347,6 @@ function spawnTarget(initialAge = 0) {
   target.userData.born = performance.now() - initialAge;
   target.userData.fadeMaterials = [material, ringMaterial];
 
-  // Estado inicial do movimento do Tracking.
   target.userData.moveFrom = target.position.clone();
   target.userData.moveTo = target.position.clone();
   target.userData.moveStart = performance.now();
@@ -394,7 +360,6 @@ function spawnTarget(initialAge = 0) {
   game.targets.push(target);
 }
 
-/* Cria um inimigo escondido atrás de um canto, que vai "peekar" */
 function spawnPeeker(delay = 500) {
   if (!game.running) return;
 
@@ -428,7 +393,6 @@ function spawnPeeker(delay = 500) {
     roughness: 0.35
   });
 
-  // Bots estáticos: alguns em pé, outros agachados.
   const crouched = Math.random() < PEEK.crouchChance;
 
   const body = new THREE.Mesh(enemyBodyGeometry, bodyMaterial);
@@ -511,7 +475,7 @@ function updatePeeker(enemy, now) {
     }
 
     case 'hold': {
-      // Bot estático: fica parado no canto durante todo o lifespan.
+
       enemy.position.x = data.visibleX;
 
       if (now >= data.phaseEnd) {
@@ -539,7 +503,7 @@ function updatePeeker(enemy, now) {
       );
 
       if (p >= 1) {
-        // Sumiu sem levar tiro: quebra o combo e perde pontos.
+
         game.escaped++;
         game.combo = 0;
         game.score = Math.max(0, game.score - PEEK.escapePenalty);
@@ -552,14 +516,12 @@ function updatePeeker(enemy, now) {
     }
   }
 
-  // Inimigo olha para o jogador apenas no eixo horizontal.
   enemy.rotation.y = Math.atan2(
     camera.position.x - enemy.position.x,
     camera.position.z - enemy.position.z
   );
 }
 
-/* Cria um bloco que cai de cima até o chão */
 function spawnGravityBlock(extraHeight = 0) {
   if (!game.running) return;
 
@@ -572,7 +534,6 @@ function spawnGravityBlock(extraHeight = 0) {
 
   const block = new THREE.Mesh(gravityBlockGeometry, material);
 
-  // Escolhe um X que não fique colado em outro bloco.
   let x = THREE.MathUtils.randFloat(-7, 7);
 
   for (let attempt = 0; attempt < 10; attempt++) {
@@ -591,7 +552,6 @@ function spawnGravityBlock(extraHeight = 0) {
 
   block.position.set(x, y, z);
 
-  // Velocidade variada, com leve aumento ao longo da partida.
   const progress = 1 - game.time / game.duration;
   const ramp = 1 + THREE.MathUtils.clamp(progress, 0, 1) * GRAVITY.rampUp;
 
@@ -642,12 +602,10 @@ function resetTargets() {
   const count = trainingMode === 'tracking' ? 1 : 5;
 
   for (let i = 0; i < count; i++) {
-    // No Flick, cada alvo começa com idade diferente para não sumirem todos juntos.
+
     spawnTarget(trainingMode === 'flick' ? i * (FLICK.lifetime / count) * 0.8 : 0);
   }
 }
-
-/* ---------- COLISÃO COM AS PAREDES (PEEK) ---------- */
 
 function collideWithPeekWalls() {
   if (trainingMode !== 'peek') return;
@@ -690,8 +648,6 @@ function collideWithPeekWalls() {
   }
 }
 
-/* ---------- SOM DE ACERTO ---------- */
-
 function playHitSound() {
   try {
     audioContext ??= new (
@@ -730,8 +686,6 @@ function playHitSound() {
   }
 }
 
-/* ---------- HUD E ESTATÍSTICAS ---------- */
-
 const MODE_LABELS = {
   flick: 'FLICK',
   tracking: 'TRACKING',
@@ -740,7 +694,6 @@ const MODE_LABELS = {
   gravity: 'GRAVITY'
 };
 
-/* Elementos do HUD guardados uma vez (evita buscar no DOM a cada frame) */
 const hudEls = {
   mode: $('#hud-mode'),
   score: $('#hud-score'),
@@ -751,7 +704,6 @@ const hudEls = {
   comboBox: $('#hud-combo-box')
 };
 
-/* Só escreve no DOM se o texto realmente mudou (evita recalcular layout todo frame) */
 function setHud(element, text) {
   const value = String(text);
   if (element.textContent !== value) element.textContent = value;
@@ -779,7 +731,6 @@ function updateHUD() {
 
   setHud(hudEls.mode, MODE_LABELS[trainingMode]);
 
-  // Pontuação sempre inteira, sem casas decimais.
   game.score = Math.max(0, Math.round(game.score));
   setHud(hudEls.score, game.score.toLocaleString('pt-BR'));
 
@@ -795,16 +746,12 @@ function updateHUD() {
   setHud(hudEls.combo, `x${comboMultiplier().toFixed(1)}`);
 }
 
-/* ---------- TOLERÂNCIA DA MIRA E DESTINOS DO TRACKING ---------- */
-
-/* Distância do raio da mira (centro da tela) até um ponto do mundo */
 function aimDistanceTo(point) {
   const toPoint = point.clone().sub(raycaster.ray.origin);
   if (toPoint.dot(raycaster.ray.direction) <= 0) return Infinity;
   return raycaster.ray.distanceToPoint(point);
 }
 
-/* Alvo esférico mais próximo da mira dentro da tolerância */
 function findSphereWithTolerance(
   limit = AIM.sphereRadius * AIM.sphereTolerance
 ) {
@@ -824,7 +771,6 @@ function findSphereWithTolerance(
   return best;
 }
 
-/* Peeker: cabeça/corpo com tolerância, respeitando a oclusão das paredes */
 function findPeekWithTolerance(wallDistance) {
   const headLimit = 0.2 * AIM.headTolerance;
   const bodyLimit = 0.28 * AIM.bodyTolerance;
@@ -840,14 +786,13 @@ function findPeekWithTolerance(wallDistance) {
       const isHead = Boolean(part.userData.isHead);
       part.getWorldPosition(p);
 
-      // Parte escondida atrás da parede não conta
       if (camera.position.distanceTo(p) > wallDistance) continue;
 
       const d = aimDistanceTo(p);
       const limit = isHead ? headLimit : bodyLimit;
 
       if (d <= limit) {
-        // Normaliza pelo limite e dá leve preferência à cabeça
+
         const score = d / limit - (isHead ? 0.25 : 0);
         if (score < bestScore) {
           bestScore = score;
@@ -860,7 +805,6 @@ function findPeekWithTolerance(wallDistance) {
   return best;
 }
 
-/* Escolhe o próximo destino do Tracking com proporção H/V controlada */
 function pickTrackingDestination(position, previousDirection, minDist, maxDist) {
   const { minX, maxX, minY, maxY } = TRACK;
 
@@ -879,7 +823,6 @@ function pickTrackingDestination(position, previousDirection, minDist, maxDist) 
     let dx = distance * hShare * (Math.random() < 0.5 ? -1 : 1);
     let dy = distance * (1 - hShare) * (Math.random() < 0.5 ? -1 : 1);
 
-    // Se passaria do limite, inverte o sentido em vez de "grudar" na borda
     if (position.x + dx < minX || position.x + dx > maxX) dx = -dx;
     if (position.y + dy < minY || position.y + dy > maxY) dy = -dy;
 
@@ -918,8 +861,6 @@ function pickTrackingDestination(position, previousDirection, minDist, maxDist) 
   };
 }
 
-/* ---------- DISPARO ---------- */
-
 function findTargetRoot(object) {
   while (object && object.parent !== targetGroup) {
     object = object.parent;
@@ -941,7 +882,6 @@ function flashCrosshair() {
 function shoot() {
   if (!game.running || !game.locked) return;
 
-  // No Tracking, o objetivo é seguir a bolinha; não é necessário clicar.
   if (trainingMode === 'tracking') return;
 
   const now = performance.now();
@@ -955,7 +895,7 @@ function shoot() {
   let headshot = false;
 
   if (trainingMode === 'peek') {
-    // As paredes bloqueiam o tiro; inimigos escondidos não são alvos.
+
     const peekTargets = game.targets.filter(
       (t) => t.userData.phase !== 'wait'
     );
@@ -975,7 +915,6 @@ function shoot() {
       }
     }
 
-    // Tolerância: se a mira passou perto, conta como acerto
     if (!hitTarget) {
       const wallHit = raycaster.intersectObjects(peekWalls.children, true)[0];
       const assisted = findPeekWithTolerance(
@@ -997,7 +936,6 @@ function shoot() {
       hitTarget = findTargetRoot(intersections[0].object);
     }
 
-    // Tolerância: se a mira passou perto, conta como acerto
     if (!hitTarget) {
       hitTarget = trainingMode === 'gravity'
         ? findSphereWithTolerance(GRAVITY.hitRadius)
@@ -1055,14 +993,10 @@ function shoot() {
   updateHUD();
 }
 
-/* ---------- CÂMERA E MOUSE ---------- */
-
 function updateCamera() {
   camera.rotation.set(pitch, yaw, 0, 'YXZ');
 }
 
-/* Captura o mouse usando movimento bruto (sem aceleração do sistema).
-   Se o navegador não suportar, usa a captura normal. */
 function lockPointer() {
   try {
     const request = canvas.requestPointerLock?.({ unadjustedMovement: true });
@@ -1132,12 +1066,9 @@ document.addEventListener('mousemove', (event) => {
   updateCamera();
 });
 
-/* ---------- TECLADO ---------- */
-
 window.addEventListener('keydown', (event) => {
   const key = event.key.toLowerCase();
 
-  // Dentro de campos do painel (número, slider, select) as teclas funcionam normalmente.
   if (event.target.closest?.('input, select, textarea')) return;
 
   game.keys.add(key);
@@ -1166,15 +1097,10 @@ window.addEventListener('blur', () => {
   game.keys.clear();
 });
 
-/* ---------- AJUSTES DE SENSIBILIDADE ---------- */
-
 const sensitivitySlider = $('#sensitivity-slider');
 const sensitivityValue = $('#sensitivity-value');
 const sensitivityUnit = $('#sensitivity-unit');
 
-/* Escalas de sensibilidade.
-   factor = radianos de giro por "pixel" do mouse para cada 1.0 de sens.
-   CS2: yaw 0.022°/count · Valorant: yaw 0.07°/count */
 const DEG = Math.PI / 180;
 
 const SENS_UNITS = {
@@ -1221,7 +1147,6 @@ function updateSensitivity() {
   sensitivityValue.value = unit.display(value);
 }
 
-/* Coloca o slider no valor equivalente a uma sensibilidade em radianos */
 function setSliderFromRadians(radians) {
   const unit = currentUnit();
 
@@ -1232,7 +1157,6 @@ function setSliderFromRadians(radians) {
   updateSensitivity();
 }
 
-/* Ao trocar a escala, mantém a mesma sensação e só converte o número */
 sensitivityUnit.addEventListener('change', () => {
   const unit = currentUnit();
   const radians = mouseSensitivity;
@@ -1241,7 +1165,6 @@ sensitivityUnit.addEventListener('change', () => {
   sensitivitySlider.max = String(unit.max);
   sensitivitySlider.step = String(unit.step);
 
-  // Campo numérico na mesma escala exibida (ex.: CS:GO 0.89)
   const fix = (n) => String(Number((n * unit.scale).toFixed(4)));
   sensitivityValue.min = fix(unit.min);
   sensitivityValue.max = fix(unit.max);
@@ -1250,7 +1173,6 @@ sensitivityUnit.addEventListener('change', () => {
   setSliderFromRadians(radians);
 });
 
-/* Enquanto digita, aplica o valor na hora sem mexer no texto do campo */
 sensitivityValue.addEventListener('input', () => {
   const unit = currentUnit();
   const typed = Number(sensitivityValue.value.replace(',', '.'));
@@ -1263,7 +1185,6 @@ sensitivityValue.addEventListener('input', () => {
   mouseSensitivity = value * unit.factor;
 });
 
-/* Digitar o valor exato (ex.: 0.89) e confirmar com Enter ou ao sair do campo */
 sensitivityValue.addEventListener('change', () => {
   const unit = currentUnit();
   const typed = Number(sensitivityValue.value.replace(',', '.'));
@@ -1286,8 +1207,6 @@ $('#sensitivity-reset').addEventListener('click', () => {
   setSliderFromRadians(DEFAULT_SENSITIVITY);
 });
 
-/* ---------- TROCA DE MODO E DURAÇÃO ---------- */
-
 $('#apply-settings').addEventListener('click', () => {
   trainingMode = $('#training-mode').value;
 
@@ -1309,7 +1228,6 @@ $('#apply-settings').addEventListener('click', () => {
   game.trackingTime = 0;
   game.trackingChecks = 0;
 
-  // Reposiciona o jogador para não ficar preso dentro de paredes.
   camera.position.set(0, 1.7, ARENA.startZ);
 
   resetTargets();
@@ -1323,8 +1241,6 @@ $('#apply-settings').addEventListener('click', () => {
     gravity: 'GRAVITY FLICK · Alvos caem de cima; acerte antes de tocarem o chão'
   }[trainingMode];
 });
-
-/* ---------- RESULTADO E REINÍCIO ---------- */
 
 function finishGame() {
   game.running = false;
@@ -1422,8 +1338,6 @@ $('#restart-game').addEventListener(
   restartGame
 );
 
-/* ---------- LOOP DO JOGO ---------- */
-
 function animate(now) {
   requestAnimationFrame(animate);
 
@@ -1441,7 +1355,6 @@ function animate(now) {
       updateHUD();
       finishGame();
     } else {
-      /* Movimento WASD relativo à câmera */
 
       const forward = new THREE.Vector3(
         -Math.sin(yaw),
@@ -1506,8 +1419,6 @@ function animate(now) {
         collideWithPeekWalls();
       }
 
-      /* Comportamento dos modos */
-
       for (const target of game.targets) {
         const data = target.userData;
         const t = now / 1000;
@@ -1520,7 +1431,6 @@ function animate(now) {
         if (trainingMode === 'gravity') {
           target.position.y -= data.speed * delta;
 
-          // Tocou o chão sem ser acertado: perde pontos.
           if (target.position.y - GRAVITY.size / 2 <= 0) {
             game.escaped++;
             game.score = Math.max(0, game.score - GRAVITY.missPenalty);
@@ -1532,14 +1442,14 @@ function animate(now) {
         }
 
         if (trainingMode === 'flick') {
-          // Alvos estáticos que vão desaparecendo com o tempo.
+
           target.position.x = data.baseX;
           target.position.y = data.baseY;
 
           const life = (now - data.born) / FLICK.lifetime;
 
           if (life >= 1) {
-            // Sumiu sem ser acertado: perde pontos e nasce outro.
+
             game.escaped++;
             game.score = Math.max(0, game.score - FLICK.missPenalty);
             removeTarget(target);
@@ -1556,11 +1466,7 @@ function animate(now) {
           });
 
         } else if (trainingMode === 'tracking') {
-          // Tracking: movimento imprevisível, suave e com
-          // mudanças ocasionais de direção no meio do trajeto.
-          // Proporção horizontal/vertical controlada por TRACK_H_SHARE.
 
-          // Garante que o estado inicial corresponda à posição real.
           if (
             !data.moveFrom ||
             !data.moveTo ||
@@ -1577,7 +1483,6 @@ function animate(now) {
             data.moveSpeed = THREE.MathUtils.randFloat(0.85, 1.25);
           }
 
-          // Chance de mudar de direção antes de chegar ao destino.
           if (
             now >= data.nextDirectionChange &&
             Math.random() < 0.045
@@ -1597,7 +1502,6 @@ function animate(now) {
             data.lastDirection = dest.direction;
             data.moveStart = now;
 
-            // Algumas mudanças são rápidas; outras, mais lentas.
             data.moveDuration = Math.random() < 0.25
               ? THREE.MathUtils.randFloat(0.5, 0.75)
               : THREE.MathUtils.randFloat(0.65, 1.2);
@@ -1606,7 +1510,6 @@ function animate(now) {
             data.nextDirectionChange = now + THREE.MathUtils.randFloat(350, 900);
           }
 
-          // Escolhe um novo destino quando termina o movimento.
           if (
             now - data.moveStart >= data.moveDuration * 1000
           ) {
@@ -1623,7 +1526,6 @@ function animate(now) {
             data.lastDirection = dest.direction;
             data.moveStart = now;
 
-            // Velocidade controlada, com acelerações ocasionais.
             data.moveDuration = Math.random() < 0.22
               ? THREE.MathUtils.randFloat(0.5, 0.75)
               : THREE.MathUtils.randFloat(0.65, 1.2);
@@ -1632,7 +1534,6 @@ function animate(now) {
             data.nextDirectionChange = now + THREE.MathUtils.randFloat(350, 900);
           }
 
-          // Interpolação suave, com velocidade variável.
           const elapsed = (now - data.moveStart) / 1000;
           const progress = THREE.MathUtils.clamp(
             elapsed / data.moveDuration,
@@ -1648,12 +1549,11 @@ function animate(now) {
             smooth
           );
 
-          // Pequena oscilação natural, sem dominar a trajetória.
           target.position.y +=
             Math.sin(now * 0.004 + data.phase) * 0.012;
 
         } else {
-          // Precision Arena: movimento leve.
+
           target.position.x =
             data.baseX +
             Math.sin(t * 0.7 * data.speed + data.phase) * 0.8;
@@ -1665,8 +1565,6 @@ function animate(now) {
 
         target.lookAt(camera.position);
       }
-
-      /* Pontuação do Tracking (com tolerância) */
 
       if (
         trainingMode === 'tracking' &&
@@ -1692,8 +1590,6 @@ function animate(now) {
   renderer.render(scene, camera);
 }
 
-/* ---------- REDIMENSIONAR ---------- */
-
 window.addEventListener('resize', () => {
   camera.aspect =
     window.innerWidth / window.innerHeight;
@@ -1709,8 +1605,6 @@ window.addEventListener('resize', () => {
     Math.min(window.devicePixelRatio, 2)
   );
 });
-
-/* ---------- INICIALIZAÇÃO ---------- */
 
 updateSensitivity();
 resetTargets();
