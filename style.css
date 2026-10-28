@@ -1,4 +1,3 @@
-
 /* =====================================
    DEBRIS ARENA — ESTILO MINIMALISTA
 ===================================== */
@@ -7,10 +6,14 @@
   --background: #c6c6c6;
   --blue: #00bfff;
   --cyan: #00efff;
+  --cyan-soft: #00eaff;
   --red: #ff102d;
-  --panel: rgba(25, 30, 35, 0.82);
+  --panel: rgba(25, 30, 35, 0.84);
+  --panel-strong: rgba(25, 30, 35, 0.91);
   --white: #ffffff;
   --text-muted: #c4cbd0;
+  --button-dark: #41494f;
+  --ink: #07131a;
 }
 
 * {
@@ -23,14 +26,27 @@ body {
   height: 100%;
   margin: 0;
   overflow: hidden;
+  background: var(--background);
+  font-family: Arial, Helvetica, sans-serif;
 }
 
 body {
-  background: var(--background);
   color: var(--white);
-  font-family: Arial, Helvetica, sans-serif;
   user-select: none;
   -webkit-user-select: none;
+}
+
+/* Texto só para leitores de tela */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 /* ===== CANVAS 3D ===== */
@@ -46,29 +62,16 @@ body {
   z-index: 0;
 }
 
-/* ===== ESCONDER A ARMA ANTIGA ===== */
-
-#weaponRig,
-.weapon-rig,
-.weapon-label,
-.weaponRig,
-#ammo,
-.ammo,
-#magSize,
-#fireLabel {
-  display: none !important;
-}
-
 /* ===== HUD SUPERIOR ===== */
 
 #simple-hud {
   position: fixed;
-  top: 16px;
-  left: 16px;
+  top: 14px;
+  left: 14px;
+  z-index: 5;
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  z-index: 5;
+  gap: 7px;
   pointer-events: none;
 }
 
@@ -76,21 +79,126 @@ body {
   display: flex;
   align-items: center;
   gap: 7px;
-  padding: 10px 13px;
+  padding: 9px 11px;
   background: var(--panel);
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 4px;
-  color: var(--text-muted);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 1px;
+  color: #d5dce0;
+  font-size: 10px;
+  font-weight: bold;
+  letter-spacing: 0.7px;
 }
 
 .hud-box strong {
-  color: var(--cyan);
+  margin-left: 5px;
+  color: var(--cyan-soft);
   font-size: 14px;
   font-weight: 800;
   font-variant-numeric: tabular-nums;
+}
+
+/* O combo só aparece no Peeker's Alley (o JS alterna o display) */
+#hud-combo-box {
+  display: none;
+}
+
+/* ===== PAINEL DE CONFIGURAÇÕES ===== */
+
+#training-settings {
+  position: fixed;
+  top: 67px;
+  left: 14px;
+  z-index: 8;
+  display: grid;
+  gap: 12px;
+  width: 230px;
+  padding: 14px;
+  color: var(--white);
+  background: var(--panel-strong);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 5px;
+}
+
+#training-settings label {
+  display: grid;
+  gap: 7px;
+  font-size: 10px;
+  font-weight: bold;
+  letter-spacing: 1px;
+}
+
+#training-settings select {
+  width: 100%;
+  padding: 9px;
+  color: var(--white);
+  background: #343b40;
+  border: 1px solid #59636a;
+  border-radius: 3px;
+  outline-color: var(--blue);
+}
+
+.sensitivity-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+#sensitivity-slider {
+  flex: 1;
+  width: 100%;
+  min-width: 0;
+  accent-color: var(--blue);
+  cursor: pointer;
+}
+
+#sensitivity-value {
+  min-width: 43px;
+  color: var(--cyan);
+  text-align: right;
+  font-size: 12px;
+}
+
+/* ===== BOTÕES DO PAINEL ===== */
+
+#sensitivity-reset,
+#settings-toggle {
+  cursor: pointer;
+}
+
+#apply-settings,
+#settings-toggle,
+#sensitivity-reset {
+  padding: 9px;
+  border: 0;
+  border-radius: 3px;
+  font-size: 10px;
+  font-weight: bold;
+  letter-spacing: 0.6px;
+}
+
+#apply-settings {
+  color: var(--ink);
+  background: var(--blue);
+  cursor: pointer;
+}
+
+#apply-settings:hover {
+  background: var(--cyan-soft);
+}
+
+#settings-toggle {
+  position: fixed;
+  top: 14px;
+  right: 14px;
+  z-index: 9;
+  color: var(--white);
+  background: rgba(25, 30, 35, 0.86);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+#sensitivity-reset {
+  color: var(--white);
+  background: var(--button-dark);
 }
 
 /* ===== MIRA CENTRAL ===== */
@@ -104,7 +212,7 @@ body {
   transform: translate(-50%, -50%);
   z-index: 6;
   pointer-events: none;
-  transition: transform 80ms ease-out;
+  transition: transform 70ms ease-out;
 }
 
 #simple-crosshair::before,
@@ -112,9 +220,7 @@ body {
   content: "";
   position: absolute;
   background: var(--cyan);
-  box-shadow:
-    1px 1px 0 #111,
-    -1px -1px 0 rgba(0, 0, 0, 0.4);
+  box-shadow: 1px 1px 1px #111;
 }
 
 #simple-crosshair::before {
@@ -135,18 +241,19 @@ body {
 
 #simple-message {
   position: fixed;
-  bottom: 18px;
+  bottom: 15px;
   left: 50%;
   transform: translateX(-50%);
-  max-width: calc(100% - 30px);
-  padding: 10px 15px;
+  z-index: 5;
+  max-width: calc(100% - 24px);
+  margin: 0;
+  padding: 10px 14px;
   background: var(--panel);
   color: #f0f3f5;
   border-radius: 4px;
   font-size: 12px;
   text-align: center;
   white-space: nowrap;
-  z-index: 5;
   pointer-events: none;
 }
 
@@ -155,12 +262,12 @@ body {
 #simple-end {
   position: fixed;
   inset: 0;
-  z-index: 10;
+  z-index: 20;
   display: none;
   align-items: center;
   justify-content: center;
   padding: 20px;
-  background: rgba(18, 22, 26, 0.82);
+  background: rgba(15, 20, 25, 0.84);
   backdrop-filter: blur(5px);
   color: var(--white);
   text-align: center;
@@ -168,41 +275,39 @@ body {
 
 #simple-end > div {
   width: min(420px, 100%);
-  padding: 32px 24px;
-  background: rgba(35, 40, 45, 0.96);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 8px;
+  padding: 28px;
+  background: #252b30;
+  border: 1px solid #424b51;
+  border-radius: 7px;
 }
 
-#simple-end h1 {
-  margin: 0 0 18px;
-  font-size: clamp(24px, 5vw, 36px);
+#simple-end h2 {
+  margin: 0 0 15px;
+  font-size: 30px;
   font-weight: 900;
   letter-spacing: 1px;
 }
 
 #final-result {
-  color: var(--text-muted);
+  color: #d1d8dc;
   font-size: 15px;
   line-height: 2;
 }
 
 #final-result strong {
-  color: var(--cyan);
+  color: var(--cyan-soft);
 }
-
-/* ===== BOTÕES ===== */
 
 #simple-end button {
   display: inline-block;
-  margin-top: 18px;
-  padding: 13px 22px;
+  margin: 8px 4px 0;
+  padding: 12px 16px;
   background: var(--blue);
-  color: #07131a;
-  border: none;
-  border-radius: 4px;
+  color: var(--ink);
+  border: 0;
+  border-radius: 3px;
   font-size: 12px;
-  font-weight: 800;
+  font-weight: bold;
   letter-spacing: 1px;
   cursor: pointer;
   transition:
@@ -215,6 +320,11 @@ body {
   transform: translateY(-2px);
 }
 
+#simple-end button.secondary {
+  color: var(--white);
+  background: var(--button-dark);
+}
+
 #simple-end button:active {
   transform: translateY(0);
 }
@@ -225,25 +335,29 @@ body {
   #simple-hud {
     top: 8px;
     left: 8px;
-    gap: 5px;
+    gap: 4px;
   }
 
   .hud-box {
-    padding: 8px;
     gap: 4px;
+    padding: 7px;
     font-size: 9px;
-    letter-spacing: 0;
   }
 
   .hud-box strong {
     font-size: 12px;
   }
 
+  #training-settings {
+    top: 57px;
+    left: 8px;
+    width: 205px;
+  }
+
   #simple-message {
-    bottom: 10px;
+    bottom: 8px;
+    width: max-content;
     font-size: 10px;
     white-space: normal;
-    width: max-content;
-    max-width: calc(100% - 20px);
   }
 }
