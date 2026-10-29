@@ -3,11 +3,9 @@
   --blue: #00bfff;
   --cyan: #00efff;
   --cyan-soft: #00eaff;
-  --red: #ff102d;
   --panel: rgba(25, 30, 35, 0.84);
   --panel-strong: rgba(25, 30, 35, 0.91);
   --white: #ffffff;
-  --text-muted: #c4cbd0;
   --button-dark: #41494f;
   --ink: #07131a;
 }
@@ -88,7 +86,6 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
-#hud-combo-box,
 #hud-missed-box {
   display: none;
 }
@@ -309,42 +306,6 @@ body {
   transform: translateY(-2px);
 }
 
-#simple-end button.secondary {
-  color: var(--white);
-  background: var(--button-dark);
-}
-
 #simple-end button:active {
   transform: translateY(0);
-}
-
-@media (max-width: 600px) {
-  #simple-hud {
-    top: 8px;
-    left: 8px;
-    gap: 4px;
-  }
-
-  .hud-box {
-    gap: 4px;
-    padding: 7px;
-    font-size: 9px;
-  }
-
-  .hud-box strong {
-    font-size: 12px;
-  }
-
-  #training-settings {
-    top: 57px;
-    left: 8px;
-    width: 205px;
-  }
-
-  #simple-message {
-    bottom: 8px;
-    width: max-content;
-    font-size: 10px;
-    white-space: normal;
-  }
 }
