@@ -9,7 +9,6 @@ if (!canvas) {
 const $ = (selector) => document.querySelector(selector);
 
 const game = {
-  score: 0,
   hits: 0,
   misses: 0,
   escaped: 0,
@@ -64,17 +63,13 @@ const GRAVITY = {
   size: 0.9,
   hitRadius: 0.85,
   speed: 3.7,
-  minGapX: 2.5,
-  baseScore: 100,
-  missPenalty: 50
+  minGapX: 2.5
 };
 
 const FLICK = {
   count: 4,
   lifetime: 2850,
-  fadeStart: 0.3,
-  missPenalty: 50,
-  speedBonus: 50
+  fadeStart: 0.3
 };
 
 const PEEK = {
@@ -93,9 +88,6 @@ const PEEK = {
   crouchChance: 0.4,
   cornerOffsetMin: 0.32,
   cornerOffsetMax: 0.7,
-  headshotBase: 300,
-  bodyBase: 100,
-  escapePenalty: 100,
   concurrent: 2
 };
 
@@ -344,9 +336,7 @@ function spawnTarget(initialAge = 0) {
   target.userData.moveStart = performance.now();
   target.userData.moveDuration = THREE.MathUtils.randFloat(0.65, 1.15);
   target.userData.lastDirection = null;
-  target.userData.directionChanges = 0;
   target.userData.nextDirectionChange = 0;
-  target.userData.moveSpeed = THREE.MathUtils.randFloat(0.85, 1.25);
 
   targetGroup.add(target);
   game.targets.push(target);
@@ -495,7 +485,6 @@ function updatePeeker(enemy, now) {
 
       if (p >= 1) {
         game.escaped++;
-        game.score = Math.max(0, game.score - PEEK.escapePenalty);
         removeTarget(enemy);
         spawnPeeker(
           THREE.MathUtils.randFloat(PEEK.respawnMin, PEEK.respawnMax)
@@ -540,8 +529,6 @@ function spawnGravityBlock(extraHeight = 0) {
   const y = GRAVITY.spawnY + extraHeight;
 
   block.position.set(x, y, z);
-
-  block.userData.speed = GRAVITY.speed;
 
   targetGroup.add(block);
   game.targets.push(block);
@@ -684,7 +671,6 @@ const MODE_LABELS = {
 
 const hudEls = {
   mode: $('#hud-mode'),
-  score: $('#hud-score'),
   hits: $('#hud-hits'),
   accuracy: $('#hud-accuracy'),
   time: $('#hud-time'),
@@ -718,11 +704,7 @@ function updateHUD() {
       );
 
   setHud(hudEls.mode, MODE_LABELS[trainingMode]);
-
-  game.score = Math.max(0, Math.round(game.score));
-  setHud(hudEls.score, game.score.toLocaleString('pt-BR'));
-
-  setHud(hudEls.hits, Math.floor(game.hits));
+  setHud(hudEls.hits, game.hits);
   setHud(hudEls.accuracy, `${accuracy}%`);
   setHud(hudEls.time, Math.ceil(Math.max(0, game.time)));
 
@@ -945,21 +927,7 @@ function shoot() {
   if (hitTarget) {
     game.hits++;
 
-    if (trainingMode === 'peek') {
-      game.score += headshot ? PEEK.headshotBase : PEEK.bodyBase;
-
-      if (headshot) game.headshots++;
-    } else if (trainingMode === 'gravity') {
-      game.score += GRAVITY.baseScore;
-    } else if (trainingMode === 'flick') {
-      const remaining = 1 - (now - hitTarget.userData.born) / FLICK.lifetime;
-
-      game.score += 100 + Math.round(
-        THREE.MathUtils.clamp(remaining, 0, 1) * FLICK.speedBonus
-      );
-    } else {
-      game.score += trainingMode === 'debris' ? 150 : 100;
-    }
+    if (headshot) game.headshots++;
 
     playHitSound();
     removeTarget(hitTarget);
@@ -1015,15 +983,15 @@ function lockedMessage() {
   }
 
   if (trainingMode === 'peek') {
-    return 'FPS · Mire nas quinas · Headshot vale 3x · Deixar o alvo sumir tira pontos';
+    return 'FPS · Mire nas quinas · Acerte antes que o alvo se esconda';
   }
 
   if (trainingMode === 'gravity') {
-    return 'GRAVITY FLICK · Acerte os alvos antes que toquem o chão · Perder tira pontos';
+    return 'GRAVITY FLICK · Acerte os alvos antes que toquem o chão';
   }
 
   if (trainingMode === 'flick') {
-    return 'SPEED · Acerte antes que a bolinha desapareça · Quanto mais rápido, mais pontos';
+    return 'SPEED · Acerte antes que a bolinha desapareça';
   }
 
   return 'WASD para mover · Mouse para mirar · Clique para acertar';
@@ -1099,7 +1067,6 @@ const SENS_UNITS = {
     min: 0.0005,
     max: 0.01,
     step: 0.0001,
-    digits: 2,
     display: (v) => (v * 100).toFixed(2)
   },
   cs: {
@@ -1108,7 +1075,6 @@ const SENS_UNITS = {
     min: 0.2,
     max: 10,
     step: 0.01,
-    digits: 2,
     display: (v) => v.toFixed(2)
   },
   valorant: {
@@ -1117,7 +1083,6 @@ const SENS_UNITS = {
     min: 0.05,
     max: 3.2,
     step: 0.01,
-    digits: 3,
     display: (v) => v.toFixed(3)
   }
 };
@@ -1206,7 +1171,6 @@ $('#apply-settings').addEventListener('click', () => {
   game.duration = newDuration;
   game.time = newDuration;
 
-  game.score = 0;
   game.hits = 0;
   game.misses = 0;
   game.escaped = 0;
@@ -1255,13 +1219,11 @@ function finishGame() {
   if (trainingMode === 'tracking') {
     $('#final-result').innerHTML =
       `Modo: <strong>TRACKING</strong><br>
-       Pontuação: <strong>${Math.floor(game.score)}</strong><br>
        Tempo com a mira no alvo: <strong>${game.trackingTime.toFixed(1).replace('.', ',')} s</strong><br>
        Acompanhamento: <strong>${accuracy}%</strong>`;
   } else if (trainingMode === 'gravity') {
     $('#final-result').innerHTML =
       `Modo: <strong>GRAVITY FLICK</strong><br>
-       Pontuação: <strong>${Math.floor(game.score)}</strong><br>
        Alvos destruídos: <strong>${game.hits}</strong><br>
        Perdidas: <strong>${game.escaped}</strong><br>
        Tiros errados: <strong>${game.misses}</strong><br>
@@ -1269,7 +1231,6 @@ function finishGame() {
   } else if (trainingMode === 'peek') {
     $('#final-result').innerHTML =
       `Modo: <strong>FPS</strong><br>
-       Pontuação: <strong>${Math.floor(game.score)}</strong><br>
        Abates: <strong>${game.hits}</strong> (headshots: <strong>${game.headshots}</strong>)<br>
        Sumiram sem levar tiro: <strong>${game.escaped}</strong><br>
        Tiros errados: <strong>${game.misses}</strong><br>
@@ -1279,7 +1240,6 @@ function finishGame() {
       `Modo: <strong>${
         trainingMode === 'debris' ? 'PRECISION ARENA' : 'SPEED'
       }</strong><br>
-       Pontuação: <strong>${Math.floor(game.score)}</strong><br>
        Acertos: <strong>${game.hits}</strong><br>
        ${trainingMode === 'flick' ? `Perdidas: <strong>${game.escaped}</strong><br>` : ''}
        Erros: <strong>${game.misses}</strong><br>
@@ -1290,7 +1250,6 @@ function finishGame() {
 }
 
 function restartGame() {
-  game.score = 0;
   game.hits = 0;
   game.misses = 0;
   game.escaped = 0;
@@ -1412,11 +1371,10 @@ function animate(now) {
         }
 
         if (trainingMode === 'gravity') {
-          target.position.y -= data.speed * delta;
+          target.position.y -= GRAVITY.speed * delta;
 
           if (target.position.y - GRAVITY.size / 2 <= 0) {
             game.escaped++;
-            game.score = Math.max(0, game.score - GRAVITY.missPenalty);
             removeTarget(target);
             spawnGravityBlock(Math.random() * 3);
           }
@@ -1432,7 +1390,6 @@ function animate(now) {
 
           if (life >= 1) {
             game.escaped++;
-            game.score = Math.max(0, game.score - FLICK.missPenalty);
             removeTarget(target);
             spawnTarget();
             continue;
@@ -1447,22 +1404,6 @@ function animate(now) {
           });
 
         } else if (trainingMode === 'tracking') {
-          if (
-            !data.moveFrom ||
-            !data.moveTo ||
-            data.moveStart === undefined ||
-            data.moveDuration === undefined
-          ) {
-            data.moveFrom = target.position.clone();
-            data.moveTo = target.position.clone();
-            data.moveStart = now;
-            data.moveDuration = THREE.MathUtils.randFloat(0.65, 1.15);
-            data.lastDirection = null;
-            data.directionChanges = 0;
-            data.nextDirectionChange = now + 500;
-            data.moveSpeed = THREE.MathUtils.randFloat(0.85, 1.25);
-          }
-
           if (
             now >= data.nextDirectionChange &&
             Math.random() < 0.045
@@ -1486,7 +1427,6 @@ function animate(now) {
               ? THREE.MathUtils.randFloat(0.6, 0.85)
               : THREE.MathUtils.randFloat(0.75, 1.3);
 
-            data.moveSpeed = THREE.MathUtils.randFloat(0.8, 1.35);
             data.nextDirectionChange = now + THREE.MathUtils.randFloat(350, 900);
           }
 
@@ -1510,7 +1450,6 @@ function animate(now) {
               ? THREE.MathUtils.randFloat(0.6, 0.85)
               : THREE.MathUtils.randFloat(0.75, 1.3);
 
-            data.moveSpeed = THREE.MathUtils.randFloat(0.85, 1.3);
             data.nextDirectionChange = now + THREE.MathUtils.randFloat(350, 900);
           }
 
@@ -1558,7 +1497,6 @@ function animate(now) {
 
         if (aimDistanceTo(tracked.position) <= limit) {
           game.trackingTime += delta;
-          game.score += delta * 100;
         }
       }
 
